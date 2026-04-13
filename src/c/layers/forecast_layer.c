@@ -661,6 +661,7 @@ void forecast_layer_create(Layer *parent_layer, GRect frame)
 
 void forecast_layer_refresh()
 {
+    if (!s_forecast_layer) return;
     text_labels_refresh();
     layer_mark_dirty(s_forecast_layer);
 #ifdef FCW2_ENABLE_MEMORY_LOGGING
@@ -673,7 +674,9 @@ void forecast_layer_refresh()
 
 void forecast_layer_destroy()
 {
+    if (!s_forecast_layer) return;
     MEMORY_LOG_HEAP("forecast_layer_destroy:before");
     layer_destroy(s_forecast_layer);
+    s_forecast_layer = NULL;
     MEMORY_LOG_HEAP("forecast_layer_destroy:after");
 }

@@ -119,13 +119,16 @@ static void weather_status_layer_init(GRect bounds) {
     city_layer_refresh();
 }
 
+// Removed sun_direction string helper as we use an arrow now
+
 static void weather_status_update_proc(Layer *layer, GContext *ctx) {
     MEMORY_LOG_HEAP("weather_status_update:enter");
     GRect bounds = layer_get_bounds(layer);
     int w = bounds.size.w;
     int h = bounds.size.h;
+
+    // Draw sun event arrow
     s_arrow_path = gpath_create(&ARROW_PATH_INFO);
-    // Translate to correct location in layer
     if (persist_get_sun_event_start_type() == 0)
         gpath_rotate_to(s_arrow_path, TRIG_MAX_ANGLE / 2);
     gpath_move_to(s_arrow_path, GPoint(w - 4, 6));
@@ -134,6 +137,7 @@ static void weather_status_update_proc(Layer *layer, GContext *ctx) {
     graphics_context_set_fill_color(ctx, GColorWhite);
     gpath_draw_filled(ctx, s_arrow_path);
     gpath_destroy(s_arrow_path);
+
     MEMORY_LOG_HEAP("weather_status_update:exit");
 }
 
@@ -154,6 +158,7 @@ void weather_status_layer_create(Layer* parent_layer, GRect frame) {
 }
 
 void weather_status_layer_refresh() {
+    if (!s_weather_status_layer) return;
     layer_mark_dirty(s_weather_status_layer);
     current_temp_layer_refresh();
     sun_event_layer_refresh();
@@ -162,10 +167,12 @@ void weather_status_layer_refresh() {
 }
 
 void weather_status_layer_destroy() {
+    if (!s_weather_status_layer) return;
     MEMORY_LOG_HEAP("weather_status_layer_destroy:before");
     text_layer_destroy(s_city_layer);
     text_layer_destroy(s_current_temp_layer);
     text_layer_destroy(s_next_sun_event_layer);
     layer_destroy(s_weather_status_layer);
+    s_weather_status_layer = NULL;
     MEMORY_LOG_HEAP("weather_status_layer_destroy:after");
 }

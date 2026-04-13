@@ -98,10 +98,10 @@ while (($#)); do
 done
 
 if [[ "$profile" == "dev" ]]; then
-  mise run build -- dev
+  bash scripts/build.sh dev
   pbw_path="build/forecaswatch2-dev.pbw"
 else
-  mise run build -- release
+  bash scripts/build.sh release
   pbw_path="build/forecaswatch2.pbw"
 fi
 

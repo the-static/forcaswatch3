@@ -79,14 +79,18 @@ void time_layer_tick() {
 }
 
 void time_layer_refresh() {
+    if (!s_time_layer) return;
     text_layer_set_font(s_time_layer, config_time_font());
     text_layer_set_text_color(s_time_layer, PBL_IF_COLOR_ELSE(g_config->color_time, GColorWhite));
     time_layer_tick();  // Update main time text and layer positions
 }
 
 void time_layer_destroy() {
+    if (!s_container_layer) return;
     MEMORY_LOG_HEAP("time_layer_destroy:before");
     text_layer_destroy(s_time_layer);
+    s_time_layer = NULL;
     text_layer_destroy(s_container_layer);
+    s_container_layer = NULL;
     MEMORY_LOG_HEAP("time_layer_destroy:after");
 }

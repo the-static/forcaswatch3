@@ -5,6 +5,7 @@
 #include "c/layers/calendar_layer.h"
 #include "c/layers/calendar_status_layer.h"
 #include "c/layers/weather_summary_layer.h"
+#include "c/layers/precip_chart_layer.h"
 #include "c/layers/loading_layer.h"
 #include "c/appendix/app_message.h"
 #include "c/appendix/persist.h"
@@ -28,8 +29,6 @@ static void main_window_load(Window *window) {
     int h = bounds.size.h;
     window_set_background_color(window, GColorBlack);
     
-    forecast_layer_create(s_window_layer,
-            GRect(0, h - FORECAST_HEIGHT, w, FORECAST_HEIGHT));
     weather_status_layer_create(s_window_layer,
             GRect(0, h - FORECAST_HEIGHT - WEATHER_STATUS_HEIGHT, w, WEATHER_STATUS_HEIGHT));
     time_layer_create(s_window_layer,
@@ -37,14 +36,19 @@ static void main_window_load(Window *window) {
             bounds.size.w, TIME_HEIGHT));
 
     s_current_top_content = g_config->top_content;
+    calendar_status_layer_create(s_window_layer,
+            GRect(0, 0, bounds.size.w, CALENDAR_STATUS_HEIGHT + 1));
+
     if (s_current_top_content == TOP_CONTENT_CALENDAR) {
         calendar_layer_create(s_window_layer,
                 GRect(0, CALENDAR_STATUS_HEIGHT, bounds.size.w, CALENDAR_HEIGHT));
-        calendar_status_layer_create(s_window_layer,
-                GRect(0, 0, bounds.size.w, CALENDAR_STATUS_HEIGHT + 1));  // +1 to stop text clipping
+        forecast_layer_create(s_window_layer,
+                GRect(0, h - FORECAST_HEIGHT, w, FORECAST_HEIGHT));
     } else {
         weather_summary_layer_create(s_window_layer,
-                GRect(0, 0, bounds.size.w, CALENDAR_HEIGHT + CALENDAR_STATUS_HEIGHT));
+                GRect(0, CALENDAR_STATUS_HEIGHT, bounds.size.w, CALENDAR_HEIGHT));
+        precip_chart_layer_create(s_window_layer,
+                GRect(0, h - FORECAST_HEIGHT, w, FORECAST_HEIGHT));
     }
 
     loading_layer_create(s_window_layer,
@@ -62,6 +66,7 @@ static void main_window_unload(Window *window) {
     calendar_layer_destroy();
     calendar_status_layer_destroy();
     weather_summary_layer_destroy();
+    precip_chart_layer_destroy();
     loading_layer_destroy();
     MEMORY_LOG_HEAP("after_window_unload");
 }
@@ -73,9 +78,15 @@ static void minute_handler(struct tm *tick_time, TimeUnits units_changed) {
         calendar_layer_refresh();
         calendar_status_layer_refresh();
         weather_summary_layer_refresh();
+        precip_chart_layer_refresh();
     }
     status_icons_refresh();
     loading_layer_refresh();
+}
+
+static void tap_handler(AccelAxisType axis, int32_t direction) {
+    g_config->top_content = (g_config->top_content == TOP_CONTENT_CALENDAR) ? TOP_CONTENT_WEATHER : TOP_CONTENT_CALENDAR;
+    main_window_refresh();
 }
 
 /*----------------------------
@@ -94,6 +105,7 @@ void main_window_create() {
 
     // Register with TickTimerService
     tick_timer_service_subscribe(MINUTE_UNIT | DAY_UNIT, minute_handler);
+    accel_tap_service_subscribe(tap_handler);
 
     // Show the window on the watch with animated=true
     window_stack_push(s_main_window, true);
@@ -102,33 +114,43 @@ void main_window_create() {
 
 void main_window_refresh() {
     if (s_current_top_content != g_config->top_content) {
-        // Top content setting changed, swap layers
+        // Swap ONLY the content layers
         calendar_layer_destroy();
-        calendar_status_layer_destroy();
         weather_summary_layer_destroy();
+        forecast_layer_destroy();
+        precip_chart_layer_destroy();
         
         GRect bounds = layer_get_bounds(s_window_layer);
+        int w = bounds.size.w;
+        int h = bounds.size.h;
         s_current_top_content = g_config->top_content;
+
         if (s_current_top_content == TOP_CONTENT_CALENDAR) {
             calendar_layer_create(s_window_layer,
                     GRect(0, CALENDAR_STATUS_HEIGHT, bounds.size.w, CALENDAR_HEIGHT));
-            calendar_status_layer_create(s_window_layer,
-                    GRect(0, 0, bounds.size.w, CALENDAR_STATUS_HEIGHT + 1));
+            forecast_layer_create(s_window_layer,
+                    GRect(0, h - FORECAST_HEIGHT, w, FORECAST_HEIGHT));
         } else {
             weather_summary_layer_create(s_window_layer,
-                    GRect(0, 0, bounds.size.w, CALENDAR_HEIGHT + CALENDAR_STATUS_HEIGHT));
+                    GRect(0, CALENDAR_STATUS_HEIGHT, bounds.size.w, CALENDAR_HEIGHT));
+            precip_chart_layer_create(s_window_layer,
+                    GRect(0, h - FORECAST_HEIGHT, w, FORECAST_HEIGHT));
         }
     }
 
     time_layer_refresh();
     weather_status_layer_refresh();
-    forecast_layer_refresh();
-    calendar_layer_refresh();
     calendar_status_layer_refresh();
+    
+    // Refresh active content layers
+    calendar_layer_refresh();
     weather_summary_layer_refresh();
+    forecast_layer_refresh();
+    precip_chart_layer_refresh();
 }
 
 void main_window_destroy() {
+    accel_tap_service_unsubscribe();
     // Interface for destroying the main window (implicitly unloads contents)
     window_destroy(s_main_window);
 }

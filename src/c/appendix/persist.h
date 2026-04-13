@@ -22,6 +22,8 @@ int persist_get_current_temp();
 int persist_get_wind_speed();
 int persist_get_wind_deg();
 int persist_get_humidity();
+int persist_get_wind_gust();
+void persist_get_precip_7day(uint8_t *buffer);
 int persist_get_city(char *buffer, const size_t buffer_size);
 
 int persist_get_sun_event_start_type();
@@ -46,6 +48,8 @@ void persist_set_current_temp(int val);
 void persist_set_wind_speed(int val);
 void persist_set_wind_deg(int val);
 void persist_set_humidity(int val);
+void persist_set_wind_gust(int val);
+void persist_set_precip_7day(uint8_t *val);
 void persist_set_city(char *val);
 
 void persist_set_sun_event_start_type(int val);

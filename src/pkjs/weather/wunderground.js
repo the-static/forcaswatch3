@@ -117,6 +117,51 @@ WundergroundProvider.prototype.withApiKey = function(callback, onFailure) {
     }
 };
 
+WundergroundProvider.prototype.withWundergroundDailyForecast = function(lat, lon, apiKey, callback, onFailure) {
+    // V1 10-day is often more accessible than V3 daily
+    var url = 'https://api.weather.com/v1/geocode/' + lat + '/' + lon + '/forecast/daily/10day.json?language=en-US&units=e&apiKey=' + apiKey;
+
+    console.log('Requesting V1 daily: ' + url);
+
+    request(
+        url,
+        'GET',
+        function(response) {
+            var weatherData;
+            try {
+                weatherData = JSON.parse(response);
+            }
+            catch (ex) {
+                console.log('V1 daily parse fail');
+                callback([0, 0, 0, 0, 0, 0, 0]);
+                return;
+            }
+
+            if (!weatherData || !Array.isArray(weatherData.forecasts)) {
+                console.log('V1 daily missing forecasts');
+                callback([0, 0, 0, 0, 0, 0, 0]);
+                return;
+            }
+
+            // Map the next 7 days
+            var dailyPrecip = weatherData.forecasts.slice(0, 7).map(function(day) {
+                // Return max of day/night pop
+                var dayPop = (day.day && typeof day.day.pop === 'number') ? day.day.pop : 0;
+                var nightPop = (day.night && typeof day.night.pop === 'number') ? day.night.pop : 0;
+                return Math.max(dayPop, nightPop);
+            });
+            // Pad if short
+            while (dailyPrecip.length < 7) dailyPrecip.push(0);
+
+            callback(dailyPrecip);
+        },
+        function(error) {
+            console.log('Daily fetch failed, using zero bars');
+            callback([0, 0, 0, 0, 0, 0, 0]);
+        }
+    );
+};
+
 // ============== IMPORTANT OVERRIDE ================
 
 WundergroundProvider.prototype.withProviderData = function(lat, lon, force, onSuccess, onFailure) {
@@ -131,18 +176,23 @@ WundergroundProvider.prototype.withProviderData = function(lat, lon, force, onSu
     this.withApiKey((function(apiKey) {
         this.withWundergroundCurrent(lat, lon, apiKey, (function(currentData) {
             this.withWundergroundForecast(lat, lon, apiKey, (function(forecast) {
-                this.tempTrend = forecast.map(function(entry) {
-                    return entry.temp;
-                });
-                this.precipTrend = forecast.map(function(entry) {
-                    return entry.pop / 100.0;
-                });
-                this.startTime = forecast[0].fcst_valid;
-                this.currentTemp = currentData.temperature;
-                this.humidity = currentData.relativeHumidity;
-                this.windSpeed = currentData.windSpeed;
-                this.windDeg = currentData.windDirection;
-                onSuccess();
+                this.withWundergroundDailyForecast(lat, lon, apiKey, (function(dailyPrecip) {
+                    this.tempTrend = forecast.map(function(entry) {
+                        return entry.temp;
+                    });
+                    this.precipTrend = forecast.map(function(entry) {
+                        return entry.pop / 100.0;
+                    });
+                    this.startTime = forecast[0].fcst_valid;
+                    this.currentTemp = currentData.temperature;
+                    this.humidity = currentData.relativeHumidity;
+                    this.windSpeed = currentData.windSpeed;
+                    this.windDeg = currentData.windDirection;
+                    // Try to find gust in current observation, otherwise fallback to speed
+                    this.windGust = currentData.windGust || currentData.gust || currentData.windSpeed;
+                    this.precip7day = dailyPrecip;
+                    onSuccess();
+                }).bind(this), onFailure);
             }).bind(this), onFailure);
         }).bind(this), onFailure);
     }).bind(this), onFailure);

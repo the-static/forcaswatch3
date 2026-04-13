@@ -4,6 +4,7 @@
 #include "memory_log.h"
 
 // NOTE: g_config is a global config variable
+Config *g_config;
 
 // Returns defaults as a function (not a static const) because GColor values like
 // GColorBlack expand to "compound literals" — C's syntax for inline struct values.

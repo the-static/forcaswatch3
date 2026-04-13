@@ -611,7 +611,9 @@ WeatherProvider.prototype.getPayload = function() {
         SUN_EVENTS: [this.sunEvents[0].type === 'sunrise' ? 0 : 1].concat(sunEventsByteArray),
         WIND_SPEED: Math.round(this.windSpeed || 0),
         WIND_DEG: Math.round(this.windDeg || 0),
-        HUMIDITY: Math.round(this.humidity || 0)
+        HUMIDITY: Math.round(this.humidity || 0),
+        WIND_GUST: Math.round(this.windGust || 0),
+        PRECIP_7DAY_STR: (this.precip7day || [0,0,0,0,0,0,0]).join(',')
     };
     return payload;
 };

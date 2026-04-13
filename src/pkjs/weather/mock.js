@@ -221,7 +221,9 @@ MockProvider.prototype.withProviderData = function(lat, lon, force, callback) {
     this.currentTemp = data.currentTemp;
     this.windSpeed = 12;
     this.windDeg = 315; // NW
+    this.windGust = 18;
     this.humidity = 65;
+    this.precip7day = [10, 20, 80, 50, 0, 5, 15];
  
     callback();
 };

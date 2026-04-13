@@ -9,6 +9,8 @@
 #include "c/layers/weather_summary_layer.h"
 #include "c/windows/main_window.h"
 #include "memory_log.h"
+#include <stdlib.h>
+#include <string.h>
 
 static void inbox_received_callback(DictionaryIterator *iterator, void *context) {
     APP_LOG(APP_LOG_LEVEL_INFO, "Message received!");
@@ -23,6 +25,8 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
     Tuple *wind_speed_tuple = dict_find(iterator, MESSAGE_KEY_WIND_SPEED);
     Tuple *wind_deg_tuple = dict_find(iterator, MESSAGE_KEY_WIND_DEG);
     Tuple *humidity_tuple = dict_find(iterator, MESSAGE_KEY_HUMIDITY);
+    Tuple *wind_gust_tuple = dict_find(iterator, MESSAGE_KEY_WIND_GUST);
+    Tuple *precip_str_tuple = dict_find(iterator, MESSAGE_KEY_PRECIP_7DAY_STR);
 
     // Clay config options
     Tuple *clay_celsius_tuple = dict_find(iterator, MESSAGE_KEY_CLAY_CELSIUS);
@@ -44,7 +48,7 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
     Tuple *clay_day_night_shading_tuple = dict_find(iterator, MESSAGE_KEY_CLAY_DAY_NIGHT_SHADING);
     Tuple *clay_top_content_tuple = dict_find(iterator, MESSAGE_KEY_CLAY_TOP_CONTENT);
 
-    if(temp_trend_tuple && temp_trend_tuple && forecast_start_tuple && num_entries_tuple && city_tuple && sun_events_tuple) {
+    if(temp_trend_tuple && precip_trend_tuple && forecast_start_tuple && num_entries_tuple && city_tuple && sun_events_tuple) {
         // Weather data received
         APP_LOG(APP_LOG_LEVEL_INFO, "All tuples received!");
         persist_set_forecast_start((time_t)forecast_start_tuple->value->int32);
@@ -73,6 +77,20 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
         if (wind_speed_tuple) persist_set_wind_speed((int)wind_speed_tuple->value->int32);
         if (wind_deg_tuple) persist_set_wind_deg((int)wind_deg_tuple->value->int32);
         if (humidity_tuple) persist_set_humidity((int)humidity_tuple->value->int32);
+        if (wind_gust_tuple) persist_set_wind_gust((int)wind_gust_tuple->value->int32);
+        
+        if (precip_str_tuple) {
+            uint8_t precip_values[7];
+            char *str = (char*)precip_str_tuple->value->cstring;
+            char *curr = str;
+            for (int i = 0; i < 7; i++) {
+                precip_values[i] = (uint8_t)atoi(curr);
+                curr = strchr(curr, ',');
+                if (curr) curr++;
+                else break;
+            }
+            persist_set_precip_7day(precip_values);
+        }
         loading_layer_refresh();
         forecast_layer_refresh();
         weather_status_layer_refresh();
@@ -157,7 +175,7 @@ void app_message_init() {
     app_message_register_inbox_dropped(inbox_dropped_callback);
 
     // Open AppMessage
-    const int inbox_size = 256;
+    const int inbox_size = 1024;
     const int outbox_size = dict_calc_buffer_size(1, sizeof(uint8_t));
     APP_LOG(APP_LOG_LEVEL_INFO, "AppMessage buffer sizes: inbox=%d outbox=%d", inbox_size, outbox_size);
     app_message_open(inbox_size, outbox_size);

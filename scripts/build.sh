@@ -14,9 +14,16 @@ if [[ "${1:-}" == "--" ]]; then
 fi
 
 scripts/ensure-pebble-sdk.sh
-mise run prepare-package -- "$profile"
+bash scripts/prepare-package.sh "$profile"
 pebble build "$@"
 
 if [[ "$profile" == "dev" ]]; then
-  cp build/forecaswatch2.pbw build/forecaswatch2-dev.pbw
+  # Dynamically find the .pbw file in the build directory
+  generated_pbw=$(find build -maxdepth 1 -name "*.pbw" ! -name "*-dev.pbw" | head -n 1)
+  if [[ -n "$generated_pbw" ]]; then
+    cp "$generated_pbw" build/forecaswatch2-dev.pbw
+  else
+    echo "Error: No .pbw file found in build directory" >&2
+    exit 1
+  fi
 fi
