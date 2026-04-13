@@ -87,7 +87,10 @@
       "CLAY_COLOR_US_FEDERAL",
       "CLAY_COLOR_TIME",
       "CLAY_DAY_NIGHT_SHADING",
-      "CLAY_TOP_CONTENT"
+      "CLAY_TOP_CONTENT",
+      "WIND_SPEED",
+      "WIND_DEG",
+      "HUMIDITY"
     ]
   }
 }

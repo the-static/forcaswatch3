@@ -69,7 +69,7 @@ WundergroundProvider.prototype.withWundergroundCurrent = function(lat, lon, apiK
                 return;
             }
 
-            callback(weatherData.temperature);
+            callback(weatherData);
         }).bind(this),
         function(error) {
             onFailure({ stage: 'provider_data', code: 'wu_current_' + error.code });
@@ -129,7 +129,7 @@ WundergroundProvider.prototype.withProviderData = function(lat, lon, force, onSu
     }
 
     this.withApiKey((function(apiKey) {
-        this.withWundergroundCurrent(lat, lon, apiKey, (function(currentTemp) {
+        this.withWundergroundCurrent(lat, lon, apiKey, (function(currentData) {
             this.withWundergroundForecast(lat, lon, apiKey, (function(forecast) {
                 this.tempTrend = forecast.map(function(entry) {
                     return entry.temp;
@@ -138,7 +138,10 @@ WundergroundProvider.prototype.withProviderData = function(lat, lon, force, onSu
                     return entry.pop / 100.0;
                 });
                 this.startTime = forecast[0].fcst_valid;
-                this.currentTemp = currentTemp;
+                this.currentTemp = currentData.temperature;
+                this.humidity = currentData.relativeHumidity;
+                this.windSpeed = currentData.windSpeed;
+                this.windDeg = currentData.windDirection;
                 onSuccess();
             }).bind(this), onFailure);
         }).bind(this), onFailure);

@@ -20,6 +20,9 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
     Tuple *current_temp_tuple = dict_find(iterator, MESSAGE_KEY_CURRENT_TEMP);
     Tuple *city_tuple = dict_find(iterator, MESSAGE_KEY_CITY);
     Tuple *sun_events_tuple = dict_find(iterator, MESSAGE_KEY_SUN_EVENTS);
+    Tuple *wind_speed_tuple = dict_find(iterator, MESSAGE_KEY_WIND_SPEED);
+    Tuple *wind_deg_tuple = dict_find(iterator, MESSAGE_KEY_WIND_DEG);
+    Tuple *humidity_tuple = dict_find(iterator, MESSAGE_KEY_HUMIDITY);
 
     // Clay config options
     Tuple *clay_celsius_tuple = dict_find(iterator, MESSAGE_KEY_CLAY_CELSIUS);
@@ -67,6 +70,9 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
         time_t *sun_event_times = (time_t*) (sun_events_tuple->value->data + 1);
         persist_set_sun_event_start_type(sun_event_start_type);
         persist_set_sun_event_times(sun_event_times, 2);
+        if (wind_speed_tuple) persist_set_wind_speed((int)wind_speed_tuple->value->int32);
+        if (wind_deg_tuple) persist_set_wind_deg((int)wind_deg_tuple->value->int32);
+        if (humidity_tuple) persist_set_humidity((int)humidity_tuple->value->int32);
         loading_layer_refresh();
         forecast_layer_refresh();
         weather_status_layer_refresh();

@@ -219,7 +219,10 @@ MockProvider.prototype.withProviderData = function(lat, lon, force, callback) {
     });
     this.startTime = data.startEpoch;
     this.currentTemp = data.currentTemp;
-
+    this.windSpeed = 12;
+    this.windDeg = 315; // NW
+    this.humidity = 65;
+ 
     callback();
 };
 

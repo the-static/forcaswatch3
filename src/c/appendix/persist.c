@@ -3,7 +3,7 @@
 
 enum key {
     TEMP_LO, TEMP_HI, TEMP_TREND, PRECIP_TREND, FORECAST_START, CITY, SUN_EVENT_START_TYPE, SUN_EVENT_TIMES, NUM_ENTRIES,
-    CURRENT_TEMP, BATTERY_LEVEL, CONFIG
+    CURRENT_TEMP, WIND_SPEED, WIND_DEG, HUMIDITY, BATTERY_LEVEL, CONFIG
 }; // Deprecated: BATTERY_LEVEL
 
 void persist_init() {
@@ -93,6 +93,18 @@ int persist_get_current_temp() {
     return persist_read_int(CURRENT_TEMP);
 }
 
+int persist_get_wind_speed() {
+    return persist_exists(WIND_SPEED) ? persist_read_int(WIND_SPEED) : 0;
+}
+
+int persist_get_wind_deg() {
+    return persist_exists(WIND_DEG) ? persist_read_int(WIND_DEG) : 0;
+}
+
+int persist_get_humidity() {
+    return persist_exists(HUMIDITY) ? persist_read_int(HUMIDITY) : 0;
+}
+
 int persist_get_city(char *buffer, const size_t buffer_size) {
     return persist_read_string(CITY, buffer, buffer_size);
 }
@@ -135,6 +147,18 @@ void persist_set_num_entries(int val) {
 
 void persist_set_current_temp(int val) {
     persist_write_int(CURRENT_TEMP, val);
+}
+
+void persist_set_wind_speed(int val) {
+    persist_write_int(WIND_SPEED, val);
+}
+
+void persist_set_wind_deg(int val) {
+    persist_write_int(WIND_DEG, val);
+}
+
+void persist_set_humidity(int val) {
+    persist_write_int(HUMIDITY, val);
 }
 
 void persist_set_city(char *val) {
