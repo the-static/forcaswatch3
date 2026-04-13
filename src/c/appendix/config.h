@@ -8,6 +8,11 @@ enum TimeFont {
     TIME_FONT_BITHAM = 2,
 };
 
+enum TopContent {
+    TOP_CONTENT_CALENDAR = 0,
+    TOP_CONTENT_WEATHER = 1,
+};
+
 typedef struct {
     bool celsius;
     bool time_lead_zero;
@@ -26,6 +31,7 @@ typedef struct {
     GColor color_us_federal;
     GColor color_time;
     bool day_night_shading;
+    int16_t top_content;
 } Config;
 
 Config *g_config;

@@ -79,6 +79,26 @@ module.exports = [
         "items": [
             {
                 "type": "heading",
+                "defaultValue": "Top Section",
+            },
+            {
+                "type": "select",
+                "label": "Top section content",
+                "messageKey": "topContent",
+                "defaultValue": "calendar",
+                "options": [
+                    {
+                        "label": "Calendar",
+                        "value": "calendar"
+                    },
+                    {
+                        "label": "Weather Summary",
+                        "value": "weather"
+                    }
+                ]
+            },
+            {
+                "type": "heading",
                 "defaultValue": "Calendar",
             },
             {

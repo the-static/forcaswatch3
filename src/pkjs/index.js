@@ -379,6 +379,7 @@ function sendClaySettings() {
         "CLAY_COLOR_US_FEDERAL": app.settings.hasOwnProperty('colorUSFederal') ? app.settings.colorUSFederal : 16777215,
         "CLAY_COLOR_TIME": app.settings.hasOwnProperty('colorTime') ? app.settings.colorTime : 16777215,
         "CLAY_DAY_NIGHT_SHADING": app.settings.hasOwnProperty('dayNightShading') ? app.settings.dayNightShading : true,
+        "CLAY_TOP_CONTENT": ['calendar', 'weather'].indexOf(app.settings.topContent),
     }
     Pebble.sendAppMessage(payload, function() {
         console.log('Message sent successfully: ' + JSON.stringify(payload));
@@ -431,6 +432,7 @@ function clayTryDefaults() {
             location: '',
             dayNightShading: true,
             telemetryEnabled: true,
+            topContent: 'calendar',
         }
         localStorage.setItem('clay-settings', JSON.stringify(persistClay));
         return;
@@ -446,6 +448,7 @@ function clayTryDefaults() {
             location: '',
             dayNightShading: true,
             telemetryEnabled: true,
+            topContent: 'calendar',
         }
         localStorage.setItem('clay-settings', JSON.stringify(persistClay));
         return;
@@ -453,6 +456,11 @@ function clayTryDefaults() {
 
     if (!Object.prototype.hasOwnProperty.call(persistClay, 'telemetryEnabled')) {
         persistClay.telemetryEnabled = true;
+        localStorage.setItem('clay-settings', JSON.stringify(persistClay));
+    }
+
+    if (!Object.prototype.hasOwnProperty.call(persistClay, 'topContent')) {
+        persistClay.topContent = 'calendar';
         localStorage.setItem('clay-settings', JSON.stringify(persistClay));
     }
 

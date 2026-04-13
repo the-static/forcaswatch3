@@ -138,7 +138,9 @@ void calendar_status_layer_create(Layer* parent_layer, GRect frame) {
 
 void bluetooth_icons_refresh(bool connected) {
     (void)connected;
-    layer_mark_dirty(s_calendar_status_layer);
+    if (s_calendar_status_layer) {
+        layer_mark_dirty(s_calendar_status_layer);
+    }
 }
 
 void bluetooth_callback(bool connected) {
@@ -152,13 +154,16 @@ bool show_qt_icon() {
 }
 
 void status_icons_refresh() {
-    layer_mark_dirty(s_calendar_status_layer);
+    if (s_calendar_status_layer) {
+        layer_mark_dirty(s_calendar_status_layer);
+    }
 
     // Ensure bt icons are correct at start
     bluetooth_icons_refresh(connection_service_peek_pebble_app_connection());
 }
 
 void calendar_status_layer_refresh() {
+    if (!s_calendar_status_layer) return;
     static char s_buffer_month[10];
     time_t now = time(NULL);
     struct tm *tm_now = localtime(&now);
@@ -183,6 +188,9 @@ void calendar_status_layer_destroy() {
         gbitmap_destroy(s_bt_disconnect_bitmap);
         s_bt_disconnect_bitmap = NULL;
     }
-    layer_destroy(s_calendar_status_layer);
+    if (s_calendar_status_layer) {
+        layer_destroy(s_calendar_status_layer);
+        s_calendar_status_layer = NULL;
+    }
     MEMORY_LOG_HEAP("calendar_status_layer_destroy:after");
 }

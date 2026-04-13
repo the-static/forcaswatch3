@@ -27,7 +27,8 @@ static Config config_defaults(void) {
         .color_sunday = GColorWhite,
         .color_us_federal = GColorWhite,
         .color_time = GColorWhite,
-        .day_night_shading = true
+        .day_night_shading = true,
+        .top_content = TOP_CONTENT_CALENDAR
     };
 }
 

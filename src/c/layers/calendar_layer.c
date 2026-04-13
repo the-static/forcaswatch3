@@ -141,12 +141,15 @@ void calendar_layer_create(Layer* parent_layer, GRect frame) {
 
 
 void calendar_layer_refresh() {
+    if (!s_calendar_layer) return;
     // Request redraw (of today's highlight)
     layer_mark_dirty(s_calendar_layer);
 }
 
 void calendar_layer_destroy() {
+    if (!s_calendar_layer) return;
     MEMORY_LOG_HEAP("calendar_layer_destroy:before");
     layer_destroy(s_calendar_layer);
+    s_calendar_layer = NULL;
     MEMORY_LOG_HEAP("calendar_layer_destroy:after");
 }
