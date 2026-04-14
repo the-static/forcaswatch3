@@ -109,6 +109,12 @@ OpenWeatherMapProvider.prototype.withProviderData = function(lat, lon, force, on
         this.precip7day = (weatherData.daily || []).slice(0, 7).map(function(day) {
             return Math.round((day.pop || 0) * 100);
         });
+        this.temp7dayHi = (weatherData.daily || []).slice(0, 7).map(function(day) {
+            return day.temp && typeof day.temp.max === 'number' ? Math.round(day.temp.max) : 0;
+        });
+        this.temp7dayLo = (weatherData.daily || []).slice(0, 7).map(function(day) {
+            return day.temp && typeof day.temp.min === 'number' ? Math.round(day.temp.min) : 0;
+        });
         onSuccess();
     }).bind(this), onFailure);
 };

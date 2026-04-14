@@ -13,23 +13,23 @@ Config *g_config;
 static Config config_defaults(void) {
     return (Config) {
         .celsius = false,
-        .time_lead_zero = false,
-        .axis_12h = false,
+        .time_lead_zero = true,
+        .axis_12h = true,
         .start_mon = false,
         .prev_week = true,
         .show_qt = true,
         .show_bt = true,
         .show_bt_disconnect = true,
-        .vibe = false,
-        .show_am_pm = false,
-        .time_font = TIME_FONT_ROBOTO,
+        .vibe = true,
+        .show_am_pm = true,
+        .time_font = TIME_FONT_LECO,
         .color_today = GColorBlack,
         .color_saturday = GColorWhite,
         .color_sunday = GColorWhite,
         .color_us_federal = GColorWhite,
         .color_time = GColorWhite,
         .day_night_shading = true,
-        .top_content = TOP_CONTENT_CALENDAR
+        .top_content = TOP_CONTENT_WEATHER
     };
 }
 

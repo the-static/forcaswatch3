@@ -84,7 +84,17 @@ static void minute_handler(struct tm *tick_time, TimeUnits units_changed) {
     loading_layer_refresh();
 }
 
+static bool s_tap_locked = false;
+
+static void tap_unlock_callback(void *data) {
+    s_tap_locked = false;
+}
+
 static void tap_handler(AccelAxisType axis, int32_t direction) {
+    if (s_tap_locked) return;
+    s_tap_locked = true;
+    app_timer_register(1000, tap_unlock_callback, NULL);
+
     g_config->top_content = (g_config->top_content == TOP_CONTENT_CALENDAR) ? TOP_CONTENT_WEATHER : TOP_CONTENT_CALENDAR;
     main_window_refresh();
 }

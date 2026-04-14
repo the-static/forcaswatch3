@@ -25,6 +25,53 @@ static void weather_summary_layer_update_proc(Layer *layer, GContext *ctx) {
     graphics_context_set_fill_color(ctx, GColorWhite);
     gpath_draw_filled(ctx, s_wind_arrow_path);
     gpath_destroy(s_wind_arrow_path);
+
+    // Draw moon phase
+    time_t t = time(NULL);
+    long diff = ((long)t - 592200);
+    while (diff < 0) diff += 2551443;
+    int phase = (diff % 2551443) * 28 / 2551443; // 0 to 27
+    
+    GPoint moon_center = GPoint(bounds.size.w - 15, 30);
+    int r = 6;
+    
+    graphics_context_set_fill_color(ctx, GColorWhite);
+    graphics_fill_circle(ctx, moon_center, r);
+    
+    graphics_context_set_fill_color(ctx, GColorBlack);
+    if (phase == 0) {
+        // New moon
+        graphics_fill_circle(ctx, moon_center, r - 1);
+    } else if (phase < 7) {
+        // Waxing crescent. Sliver on the right.
+        int offset = phase; // 1 to 6
+        graphics_fill_circle(ctx, GPoint(moon_center.x - offset, moon_center.y), r);
+    } else if (phase == 7) {
+        // First quarter. Right half lit.
+        graphics_fill_rect(ctx, GRect(moon_center.x - r - 1, moon_center.y - r - 1, r + 1, 2*r + 3), 0, GCornerNone);
+    } else if (phase < 14) {
+        // Waxing gibbous. Mostly right lit, small dark on left.
+        int width = 14 - phase; // 1 to 6
+        graphics_fill_rect(ctx, GRect(moon_center.x - r - 1, moon_center.y - r - 1, width, 2*r + 3), 0, GCornerNone);
+    } else if (phase == 14) {
+        // Full moon
+        // do nothing, fully white
+    } else if (phase < 21) {
+        // Waning gibbous. Mostly left lit, small dark on right.
+        int width = phase - 14; // 1 to 6
+        graphics_fill_rect(ctx, GRect(moon_center.x + r + 2 - width, moon_center.y - r - 1, width + 1, 2*r + 3), 0, GCornerNone);
+    } else if (phase == 21) {
+        // Last quarter. Left half lit.
+        graphics_fill_rect(ctx, GRect(moon_center.x, moon_center.y - r - 1, r + 2, 2*r + 3), 0, GCornerNone);
+    } else if (phase < 28) {
+        // Waning crescent. Sliver on the left.
+        int offset = 28 - phase; // 1 to 6
+        graphics_fill_circle(ctx, GPoint(moon_center.x + offset, moon_center.y), r);
+    }
+    
+    // Draw Earthshine (makes dark side identifiable via outline)
+    graphics_context_set_stroke_color(ctx, GColorWhite);
+    graphics_draw_circle(ctx, moon_center, r);
 }
 
 // Removed wind_direction string helper as we use an arrow now
@@ -37,13 +84,13 @@ void weather_summary_layer_create(Layer* parent_layer, GRect frame) {
     text_layer_set_background_color(s_temp_layer, GColorClear);
     text_layer_set_text_color(s_temp_layer, GColorWhite);
     text_layer_set_font(s_temp_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18));
-    text_layer_set_text_alignment(s_temp_layer, GTextAlignmentCenter);
+    text_layer_set_text_alignment(s_temp_layer, GTextAlignmentLeft);
 
     s_detail_layer = text_layer_create(GRect(0, 20, bounds.size.w, 18)); // Used for Humidity
     text_layer_set_background_color(s_detail_layer, GColorClear);
     text_layer_set_text_color(s_detail_layer, GColorWhite);
     text_layer_set_font(s_detail_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18));
-    text_layer_set_text_alignment(s_detail_layer, GTextAlignmentCenter);
+    text_layer_set_text_alignment(s_detail_layer, GTextAlignmentLeft);
 
     layer_add_child(s_weather_summary_layer, text_layer_get_layer(s_temp_layer));
     layer_add_child(s_weather_summary_layer, text_layer_get_layer(s_detail_layer));
@@ -72,8 +119,9 @@ void weather_summary_layer_refresh() {
     
     // Reposition wind text to make room for arrow
     GRect bounds = layer_get_bounds(s_weather_summary_layer);
-    layer_set_frame(text_layer_get_layer(s_temp_layer), GRect(0, 0, bounds.size.w - 20, 24));
-    text_layer_set_text_alignment(s_temp_layer, GTextAlignmentCenter);
+    layer_set_frame(text_layer_get_layer(s_temp_layer), GRect(4, 0, bounds.size.w - 24, 24));
+    layer_set_frame(text_layer_get_layer(s_detail_layer), GRect(4, 20, bounds.size.w - 24, 18));
+    text_layer_set_text_alignment(s_temp_layer, GTextAlignmentLeft);
 
     static char s_hum_buffer[16];
     snprintf(s_hum_buffer, sizeof(s_hum_buffer), "Humidity: %d%%", persist_get_humidity());

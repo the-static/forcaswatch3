@@ -3,7 +3,7 @@
 
 enum key {
     TEMP_LO, TEMP_HI, TEMP_TREND, PRECIP_TREND, FORECAST_START, CITY, SUN_EVENT_START_TYPE, SUN_EVENT_TIMES, NUM_ENTRIES,
-    CURRENT_TEMP, WIND_SPEED, WIND_DEG, HUMIDITY, BATTERY_LEVEL, CONFIG, WIND_GUST, PRECIP_7DAY
+    CURRENT_TEMP, WIND_SPEED, WIND_DEG, HUMIDITY, BATTERY_LEVEL, CONFIG, WIND_GUST, PRECIP_7DAY, TEMP_7DAY_HI, TEMP_7DAY_LO
 }; // Deprecated: BATTERY_LEVEL
 
 void persist_init() {
@@ -117,6 +117,22 @@ void persist_get_precip_7day(uint8_t *buffer) {
     }
 }
 
+void persist_get_temp_7day_hi(int16_t *buffer) {
+    if (persist_exists(TEMP_7DAY_HI)) {
+        persist_read_data(TEMP_7DAY_HI, buffer, 7 * sizeof(int16_t));
+    } else {
+        memset(buffer, 0, 7 * sizeof(int16_t));
+    }
+}
+
+void persist_get_temp_7day_lo(int16_t *buffer) {
+    if (persist_exists(TEMP_7DAY_LO)) {
+        persist_read_data(TEMP_7DAY_LO, buffer, 7 * sizeof(int16_t));
+    } else {
+        memset(buffer, 0, 7 * sizeof(int16_t));
+    }
+}
+
 int persist_get_city(char *buffer, const size_t buffer_size) {
     return persist_read_string(CITY, buffer, buffer_size);
 }
@@ -179,6 +195,14 @@ void persist_set_wind_gust(int val) {
  
 void persist_set_precip_7day(uint8_t *val) {
     persist_write_data(PRECIP_7DAY, val, 7);
+}
+
+void persist_set_temp_7day_hi(int16_t *val) {
+    persist_write_data(TEMP_7DAY_HI, val, 7 * sizeof(int16_t));
+}
+
+void persist_set_temp_7day_lo(int16_t *val) {
+    persist_write_data(TEMP_7DAY_LO, val, 7 * sizeof(int16_t));
 }
 
 void persist_set_city(char *val) {

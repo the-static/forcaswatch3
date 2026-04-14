@@ -139,7 +139,7 @@ WundergroundProvider.prototype.withWundergroundDailyForecast = function(lat, lon
 
             if (!weatherData || !Array.isArray(weatherData.forecasts)) {
                 console.log('V1 daily missing forecasts');
-                callback([0, 0, 0, 0, 0, 0, 0]);
+                callback([0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0]);
                 return;
             }
 
@@ -150,14 +150,20 @@ WundergroundProvider.prototype.withWundergroundDailyForecast = function(lat, lon
                 var nightPop = (day.night && typeof day.night.pop === 'number') ? day.night.pop : 0;
                 return Math.max(dayPop, nightPop);
             });
+            var dailyHi = weatherData.forecasts.slice(0, 7).map(function(day) {
+                return typeof day.max_temp === 'number' ? day.max_temp : 0;
+            });
+            var dailyLo = weatherData.forecasts.slice(0, 7).map(function(day) {
+                return typeof day.min_temp === 'number' ? day.min_temp : 0;
+            });
             // Pad if short
-            while (dailyPrecip.length < 7) dailyPrecip.push(0);
+            while (dailyPrecip.length < 7) { dailyPrecip.push(0); dailyHi.push(0); dailyLo.push(0); }
 
-            callback(dailyPrecip);
+            callback(dailyPrecip, dailyHi, dailyLo);
         },
         function(error) {
             console.log('Daily fetch failed, using zero bars');
-            callback([0, 0, 0, 0, 0, 0, 0]);
+            callback([0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0]);
         }
     );
 };
@@ -176,7 +182,7 @@ WundergroundProvider.prototype.withProviderData = function(lat, lon, force, onSu
     this.withApiKey((function(apiKey) {
         this.withWundergroundCurrent(lat, lon, apiKey, (function(currentData) {
             this.withWundergroundForecast(lat, lon, apiKey, (function(forecast) {
-                this.withWundergroundDailyForecast(lat, lon, apiKey, (function(dailyPrecip) {
+                this.withWundergroundDailyForecast(lat, lon, apiKey, (function(dailyPrecip, temp7dayHi, temp7dayLo) {
                     this.tempTrend = forecast.map(function(entry) {
                         return entry.temp;
                     });
@@ -191,6 +197,8 @@ WundergroundProvider.prototype.withProviderData = function(lat, lon, force, onSu
                     // Try to find gust in current observation, otherwise fallback to speed
                     this.windGust = currentData.windGust || currentData.gust || currentData.windSpeed;
                     this.precip7day = dailyPrecip;
+                    this.temp7dayHi = temp7dayHi;
+                    this.temp7dayLo = temp7dayLo;
                     onSuccess();
                 }).bind(this), onFailure);
             }).bind(this), onFailure);

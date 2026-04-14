@@ -613,7 +613,9 @@ WeatherProvider.prototype.getPayload = function() {
         WIND_DEG: Math.round(this.windDeg || 0),
         HUMIDITY: Math.round(this.humidity || 0),
         WIND_GUST: Math.round(this.windGust || 0),
-        PRECIP_7DAY_STR: (this.precip7day || [0,0,0,0,0,0,0]).join(',')
+        PRECIP_7DAY_STR: (this.precip7day || [0,0,0,0,0,0,0]).join(','),
+        TEMP_7DAY_HI_STR: (this.temp7dayHi || [0,0,0,0,0,0,0]).join(','),
+        TEMP_7DAY_LO_STR: (this.temp7dayLo || [0,0,0,0,0,0,0]).join(',')
     };
     return payload;
 };

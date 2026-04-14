@@ -27,6 +27,8 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
     Tuple *humidity_tuple = dict_find(iterator, MESSAGE_KEY_HUMIDITY);
     Tuple *wind_gust_tuple = dict_find(iterator, MESSAGE_KEY_WIND_GUST);
     Tuple *precip_str_tuple = dict_find(iterator, MESSAGE_KEY_PRECIP_7DAY_STR);
+    Tuple *temp_hi_str_tuple = dict_find(iterator, MESSAGE_KEY_TEMP_7DAY_HI_STR);
+    Tuple *temp_lo_str_tuple = dict_find(iterator, MESSAGE_KEY_TEMP_7DAY_LO_STR);
 
     // Clay config options
     Tuple *clay_celsius_tuple = dict_find(iterator, MESSAGE_KEY_CLAY_CELSIUS);
@@ -90,6 +92,30 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
                 else break;
             }
             persist_set_precip_7day(precip_values);
+        }
+        if (temp_hi_str_tuple) {
+            int16_t temp_hi_values[7];
+            char *str = (char*)temp_hi_str_tuple->value->cstring;
+            char *curr = str;
+            for (int i = 0; i < 7; i++) {
+                temp_hi_values[i] = (int16_t)atoi(curr);
+                curr = strchr(curr, ',');
+                if (curr) curr++;
+                else break;
+            }
+            persist_set_temp_7day_hi(temp_hi_values);
+        }
+        if (temp_lo_str_tuple) {
+            int16_t temp_lo_values[7];
+            char *str = (char*)temp_lo_str_tuple->value->cstring;
+            char *curr = str;
+            for (int i = 0; i < 7; i++) {
+                temp_lo_values[i] = (int16_t)atoi(curr);
+                curr = strchr(curr, ',');
+                if (curr) curr++;
+                else break;
+            }
+            persist_set_temp_7day_lo(temp_lo_values);
         }
         loading_layer_refresh();
         forecast_layer_refresh();
