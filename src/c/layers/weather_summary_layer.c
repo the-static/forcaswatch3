@@ -123,8 +123,9 @@ void weather_summary_layer_refresh() {
     layer_set_frame(text_layer_get_layer(s_detail_layer), GRect(4, 20, bounds.size.w - 24, 18));
     text_layer_set_text_alignment(s_temp_layer, GTextAlignmentLeft);
 
-    static char s_hum_buffer[16];
-    snprintf(s_hum_buffer, sizeof(s_hum_buffer), "Humidity: %d%%", persist_get_humidity());
+    static char s_hum_buffer[32];
+    int press = persist_get_pressure();
+    snprintf(s_hum_buffer, sizeof(s_hum_buffer), "Hum: %d%%, %d.%02din", persist_get_humidity(), press / 100, press % 100);
     text_layer_set_text(s_detail_layer, s_hum_buffer);
 
     layer_mark_dirty(s_weather_summary_layer);

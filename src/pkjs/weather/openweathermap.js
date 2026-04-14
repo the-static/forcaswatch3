@@ -106,6 +106,7 @@ OpenWeatherMapProvider.prototype.withProviderData = function(lat, lon, force, on
         this.windSpeed = weatherData.current.wind_speed;
         this.windDeg = weatherData.current.wind_deg;
         this.windGust = weatherData.current.wind_gust || 0;
+        this.pressure = (weatherData.current.pressure || 1013) * 0.02953;
         this.precip7day = (weatherData.daily || []).slice(0, 7).map(function(day) {
             return Math.round((day.pop || 0) * 100);
         });

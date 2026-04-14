@@ -3,7 +3,7 @@
 
 enum key {
     TEMP_LO, TEMP_HI, TEMP_TREND, PRECIP_TREND, FORECAST_START, CITY, SUN_EVENT_START_TYPE, SUN_EVENT_TIMES, NUM_ENTRIES,
-    CURRENT_TEMP, WIND_SPEED, WIND_DEG, HUMIDITY, BATTERY_LEVEL, CONFIG, WIND_GUST, PRECIP_7DAY, TEMP_7DAY_HI, TEMP_7DAY_LO
+    CURRENT_TEMP, WIND_SPEED, WIND_DEG, HUMIDITY, BATTERY_LEVEL, CONFIG, WIND_GUST, PRECIP_7DAY, TEMP_7DAY_HI, TEMP_7DAY_LO, PRESSURE
 }; // Deprecated: BATTERY_LEVEL
 
 void persist_init() {
@@ -105,6 +105,10 @@ int persist_get_humidity() {
     return persist_exists(HUMIDITY) ? persist_read_int(HUMIDITY) : 0;
 }
  
+int persist_get_pressure() {
+    return persist_exists(PRESSURE) ? persist_read_int(PRESSURE) : 2992;
+}
+
 int persist_get_wind_gust() {
     return persist_exists(WIND_GUST) ? persist_read_int(WIND_GUST) : 0;
 }
@@ -189,6 +193,10 @@ void persist_set_humidity(int val) {
     persist_write_int(HUMIDITY, val);
 }
  
+void persist_set_pressure(int val) {
+    persist_write_int(PRESSURE, val);
+}
+
 void persist_set_wind_gust(int val) {
     persist_write_int(WIND_GUST, val);
 }

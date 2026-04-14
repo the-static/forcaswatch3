@@ -90,7 +90,8 @@
       "CLAY_TOP_CONTENT",
       "WIND_SPEED",
       "WIND_DEG",
-      "HUMIDITY"
+      "HUMIDITY",
+      "PRESSURE"
     ]
   }
 }

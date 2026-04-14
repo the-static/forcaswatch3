@@ -196,6 +196,7 @@ WundergroundProvider.prototype.withProviderData = function(lat, lon, force, onSu
                     this.windDeg = currentData.windDirection;
                     // Try to find gust in current observation, otherwise fallback to speed
                     this.windGust = currentData.windGust || currentData.gust || currentData.windSpeed;
+                    this.pressure = currentData.pressureAltimeter || currentData.pressureMeanSeaLevel || 29.92;
                     this.precip7day = dailyPrecip;
                     this.temp7dayHi = temp7dayHi;
                     this.temp7dayLo = temp7dayLo;
