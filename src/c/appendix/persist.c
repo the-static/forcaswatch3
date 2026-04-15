@@ -3,7 +3,8 @@
 
 enum key {
     TEMP_LO, TEMP_HI, TEMP_TREND, PRECIP_TREND, FORECAST_START, CITY, SUN_EVENT_START_TYPE, SUN_EVENT_TIMES, NUM_ENTRIES,
-    CURRENT_TEMP, WIND_SPEED, WIND_DEG, HUMIDITY, BATTERY_LEVEL, CONFIG, WIND_GUST, PRECIP_7DAY, TEMP_7DAY_HI, TEMP_7DAY_LO, PRESSURE
+    CURRENT_TEMP, WIND_SPEED, WIND_DEG, HUMIDITY, BATTERY_LEVEL, CONFIG, WIND_GUST, PRECIP_7DAY, TEMP_7DAY_HI, TEMP_7DAY_LO, PRESSURE,
+    POLLEN_INDEX
 }; // Deprecated: BATTERY_LEVEL
 
 void persist_init() {
@@ -223,6 +224,14 @@ void persist_set_sun_event_start_type(int val) {
 
 void persist_set_sun_event_times(time_t *data, const size_t size) {
     persist_write_data(SUN_EVENT_TIMES, (void*) data, size * sizeof(time_t));
+}
+
+int persist_get_pollen_index() {
+    return persist_exists(POLLEN_INDEX) ? persist_read_int(POLLEN_INDEX) : -1;
+}
+
+void persist_set_pollen_index(int val) {
+    persist_write_int(POLLEN_INDEX, val);
 }
 
 void persist_set_config(Config config) {

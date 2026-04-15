@@ -222,6 +222,12 @@ module.exports = [
                 "description": "<a href='https://openweathermap.org/'>Register an OpenWeatherMap account</a> and paste your API key here"
             },
             {
+                "type": "input",
+                "label": "Google Pollen API key",
+                "messageKey": "googlePollenApiKey",
+                "description": "Optional: <a href='https://developers.google.com/maps/documentation/pollen'>Enable the Google Pollen API</a> and provide a key to see pollen levels."
+            },
+            {
                 "type": "toggle",
                 "label": "Force weather fetch",
                 "messageKey": "fetch",

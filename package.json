@@ -95,7 +95,8 @@
       "PRECIP_7DAY_STR",
       "TEMP_7DAY_HI_STR",
       "TEMP_7DAY_LO_STR",
-      "PRESSURE"
+      "PRESSURE",
+      "POLLEN_INDEX"
     ]
   },
   "telemetry": {

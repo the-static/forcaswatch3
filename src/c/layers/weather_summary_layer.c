@@ -104,10 +104,12 @@ void weather_summary_layer_create(Layer* parent_layer, GRect frame) {
 void weather_summary_layer_refresh() {
     if (!s_weather_summary_layer) return;
 
-    static char s_wind_buffer[24];
+    static char s_wind_buffer[32];
     int speed = persist_get_wind_speed();
     int gust = persist_get_wind_gust();
+    int pollen = persist_get_pollen_index();
     const char* unit = g_config->celsius ? "m/s" : "mph";
+
     if (gust > speed) {
         snprintf(s_wind_buffer, sizeof(s_wind_buffer), "Wind: %d(%d) %s", 
                  speed, gust, unit);
@@ -125,7 +127,11 @@ void weather_summary_layer_refresh() {
 
     static char s_hum_buffer[32];
     int press = persist_get_pressure();
-    snprintf(s_hum_buffer, sizeof(s_hum_buffer), "Hum: %d%%, %d.%02din", persist_get_humidity(), press / 100, press % 100);
+    if (pollen >= 0) {
+        snprintf(s_hum_buffer, sizeof(s_hum_buffer), "Hum: %d%%, Pol: %d/5", persist_get_humidity(), pollen);
+    } else {
+        snprintf(s_hum_buffer, sizeof(s_hum_buffer), "Hum: %d%%, %d.%02din", persist_get_humidity(), press / 100, press % 100);
+    }
     text_layer_set_text(s_detail_layer, s_hum_buffer);
 
     layer_mark_dirty(s_weather_summary_layer);

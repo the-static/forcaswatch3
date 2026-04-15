@@ -162,6 +162,7 @@ var WeatherProvider = function() {
     this.usedGpsCache = false;
     this.gpsErrorCode = null;
     this.locationMode = null;
+    this.pollenIndex = -1;
 };
 
 WeatherProvider.prototype.gpsEnable = function() {
@@ -511,6 +512,49 @@ WeatherProvider.prototype.withProviderData = function(lat, lon, force, onSuccess
     onSuccess();
 };
 
+WeatherProvider.prototype.withPollenData = function(lat, lon, force, callback) {
+    var claySettings = JSON.parse(localStorage.getItem('clay-settings')) || {};
+    var apiKey = claySettings.googlePollenApiKey;
+    if (!apiKey) {
+        this.pollenIndex = -1;
+        callback();
+        return;
+    }
+
+    var url = 'https://pollen.googleapis.com/v1/forecast:lookup?key=' + encodeURIComponent(apiKey) + '&location.latitude=' + lat + '&location.longitude=' + lon + '&days=1';
+    
+    var provider = this;
+    WeatherProvider.request(url, 'GET', function(response) {
+        try {
+            var data = JSON.parse(response);
+            var maxIndex = -1;
+            if (data && data.dailyInfo && data.dailyInfo.length > 0) {
+                 var info = data.dailyInfo[0];
+                 if (info.pollenTypeInfo) {
+                     for (var i = 0; i < info.pollenTypeInfo.length; i++) {
+                         var p = info.pollenTypeInfo[i];
+                         if (p.indexInfo && typeof p.indexInfo.value === 'number') {
+                             if (p.indexInfo.value > maxIndex) {
+                                 maxIndex = p.indexInfo.value;
+                             }
+                         }
+                     }
+                 }
+            }
+            provider.pollenIndex = maxIndex;
+            console.log('Pollen index fetched: ' + provider.pollenIndex);
+        } catch(e) {
+            console.log('Error parsing pollen API: ' + e);
+            provider.pollenIndex = -1;
+        }
+        callback();
+    }, function(err) {
+        console.log('Error fetching pollen: ' + JSON.stringify(err));
+        provider.pollenIndex = -1;
+        callback();
+    });
+};
+
 WeatherProvider.prototype.fetch = function(onSuccess, onFailure, force) {
     this.countryCode = null;
     this.locationMode = null;
@@ -519,9 +563,10 @@ WeatherProvider.prototype.fetch = function(onSuccess, onFailure, force) {
         this.withCityName(lat, lon, (function(cityName, countryCode) {
             this.countryCode = countryCode;
             this.withSunEvents(lat, lon, (function(sunEvents) {
-                this.withProviderData(lat, lon, force, (function() {
-                    var payload;
-                    // if `this` (the provider) contains valid weather details,
+                this.withPollenData(lat, lon, force, (function() {
+                    this.withProviderData(lat, lon, force, (function() {
+                        var payload;
+                        // if `this` (the provider) contains valid weather details,
                     // then we can safely call this.getPayload()
                     if (this.hasValidData()) {
                         console.log('Lets get the payload for ' + cityName);
@@ -548,6 +593,7 @@ WeatherProvider.prototype.fetch = function(onSuccess, onFailure, force) {
                 }).bind(this), function(providerFailure) {
                     onFailure(providerFailure || failure('provider_data', 'unknown_error'));
                 });
+                }).bind(this));
             }).bind(this), function(sunFailure) {
                 onFailure(sunFailure || failure('sun_events', 'unknown_error'));
             });
@@ -616,7 +662,8 @@ WeatherProvider.prototype.getPayload = function() {
         PRECIP_7DAY_STR: (this.precip7day || [0,0,0,0,0,0,0]).join(','),
         TEMP_7DAY_HI_STR: (this.temp7dayHi || [0,0,0,0,0,0,0]).join(','),
         TEMP_7DAY_LO_STR: (this.temp7dayLo || [0,0,0,0,0,0,0]).join(','),
-        PRESSURE: Math.round((this.pressure || 0) * 100)
+        PRESSURE: Math.round((this.pressure || 0) * 100),
+        POLLEN_INDEX: this.pollenIndex || -1
     };
     return payload;
 };

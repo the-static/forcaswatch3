@@ -62,4 +62,7 @@ void persist_set_sun_event_start_type(int val);
 
 void persist_set_sun_event_times(time_t *data, const size_t size);
 
+int persist_get_pollen_index();
+void persist_set_pollen_index(int val);
+
 void persist_set_config(Config config);

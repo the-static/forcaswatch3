@@ -30,6 +30,7 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
     Tuple *temp_hi_str_tuple = dict_find(iterator, MESSAGE_KEY_TEMP_7DAY_HI_STR);
     Tuple *temp_lo_str_tuple = dict_find(iterator, MESSAGE_KEY_TEMP_7DAY_LO_STR);
     Tuple *pressure_tuple = dict_find(iterator, MESSAGE_KEY_PRESSURE);
+    Tuple *pollen_tuple = dict_find(iterator, MESSAGE_KEY_POLLEN_INDEX);
 
     // Clay config options
     Tuple *clay_celsius_tuple = dict_find(iterator, MESSAGE_KEY_CLAY_CELSIUS);
@@ -82,6 +83,7 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
         if (humidity_tuple) persist_set_humidity((int)humidity_tuple->value->int32);
         if (wind_gust_tuple) persist_set_wind_gust((int)wind_gust_tuple->value->int32);
         if (pressure_tuple) persist_set_pressure((int)pressure_tuple->value->int32);
+        if (pollen_tuple) persist_set_pollen_index((int)pollen_tuple->value->int32);
         
         if (precip_str_tuple) {
             uint8_t precip_values[7];

@@ -91,7 +91,12 @@
       "WIND_SPEED",
       "WIND_DEG",
       "HUMIDITY",
-      "PRESSURE"
+      "WIND_GUST",
+      "PRECIP_7DAY_STR",
+      "TEMP_7DAY_HI_STR",
+      "TEMP_7DAY_LO_STR",
+      "PRESSURE",
+      "POLLEN_INDEX"
     ]
   }
 }
