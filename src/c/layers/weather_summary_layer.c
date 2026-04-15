@@ -83,13 +83,13 @@ void weather_summary_layer_create(Layer* parent_layer, GRect frame) {
     s_temp_layer = text_layer_create(GRect(0, 0, bounds.size.w, 24)); // Used for Wind
     text_layer_set_background_color(s_temp_layer, GColorClear);
     text_layer_set_text_color(s_temp_layer, GColorWhite);
-    text_layer_set_font(s_temp_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18));
+    text_layer_set_font(s_temp_layer, fonts_get_system_font(SYS_FONT_18));
     text_layer_set_text_alignment(s_temp_layer, GTextAlignmentLeft);
 
     s_detail_layer = text_layer_create(GRect(0, 20, bounds.size.w, 18)); // Used for Humidity
     text_layer_set_background_color(s_detail_layer, GColorClear);
     text_layer_set_text_color(s_detail_layer, GColorWhite);
-    text_layer_set_font(s_detail_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18));
+    text_layer_set_font(s_detail_layer, fonts_get_system_font(SYS_FONT_18));
     text_layer_set_text_alignment(s_detail_layer, GTextAlignmentLeft);
 
     layer_add_child(s_weather_summary_layer, text_layer_get_layer(s_temp_layer));

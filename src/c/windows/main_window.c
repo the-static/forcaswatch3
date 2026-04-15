@@ -11,11 +11,19 @@
 #include "c/appendix/persist.h"
 #include "c/appendix/memory_log.h"
 
+#if defined(PBL_PLATFORM_EMERY)
+#define FORECAST_HEIGHT 69
+#define WEATHER_STATUS_HEIGHT 19
+#define TIME_HEIGHT 61
+#define CALENDAR_HEIGHT 61
+#define CALENDAR_STATUS_HEIGHT 18
+#else
 #define FORECAST_HEIGHT 51
 #define WEATHER_STATUS_HEIGHT 14
 #define TIME_HEIGHT 45
 #define CALENDAR_HEIGHT 45
 #define CALENDAR_STATUS_HEIGHT 13
+#endif
 
 static Window *s_main_window;
 static int16_t s_current_top_content;

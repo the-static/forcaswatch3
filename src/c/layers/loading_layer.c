@@ -30,7 +30,7 @@ void loading_layer_create(Layer* parent_layer, GRect frame) {
     s_loading_text_layer = text_layer_create(GRect(0, h / 3, w, h));
     text_layer_set_background_color(s_loading_text_layer, GColorClear);
     text_layer_set_text_color(s_loading_text_layer, GColorWhite);
-    text_layer_set_font(s_loading_text_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18));
+    text_layer_set_font(s_loading_text_layer, fonts_get_system_font(SYS_FONT_18));
     text_layer_set_text_alignment(s_loading_text_layer, GTextAlignmentCenter);
     text_layer_set_text(s_loading_text_layer, "No data :(");
 

@@ -3,8 +3,13 @@
 #include "c/appendix/memory_log.h"
 
 // MT = Margin Top
+#if defined(PBL_PLATFORM_EMERY)
+#define MT_TIME 19
+#define MT_AM_PM 10
+#else
 #define MT_TIME 14
 #define MT_AM_PM 7
+#endif
 
 
 static TextLayer *s_container_layer;
@@ -24,7 +29,7 @@ void time_layer_create(Layer* parent_layer, GRect frame) {
     text_layer_set_text_alignment(s_time_layer, GTextAlignmentLeft);
 
     // AM/PM formatting
-    text_layer_set_font(s_am_pm_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18));
+    text_layer_set_font(s_am_pm_layer, fonts_get_system_font(SYS_FONT_18));
     text_layer_set_background_color(s_am_pm_layer, GColorClear);
     text_layer_set_text_color(s_am_pm_layer, GColorWhite);
     text_layer_set_text(s_am_pm_layer, "PM");

@@ -53,12 +53,12 @@ static void precip_chart_update_proc(Layer *layer, GContext *ctx) {
             int lo_y = chart_h - 16;
             
             // Draw hi temp to the right of the bar
-            graphics_draw_text(ctx, hi_str, fonts_get_system_font(FONT_KEY_GOTHIC_14),
+            graphics_draw_text(ctx, hi_str, fonts_get_system_font(SYS_FONT_14),
                                GRect(i * bar_w + 7, hi_y, bar_w - 7, 14),
                                GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
             
             // Draw lo temp to the right of the bar
-            graphics_draw_text(ctx, lo_str, fonts_get_system_font(FONT_KEY_GOTHIC_14),
+            graphics_draw_text(ctx, lo_str, fonts_get_system_font(SYS_FONT_14),
                                GRect(i * bar_w + 7, lo_y, bar_w - 7, 14),
                                GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
         }
@@ -73,7 +73,7 @@ static void precip_chart_update_proc(Layer *layer, GContext *ctx) {
         strftime(label, sizeof(label), "%a", t);
         label[1] = '\0';
         
-        graphics_draw_text(ctx, label, fonts_get_system_font(FONT_KEY_GOTHIC_14),
+        graphics_draw_text(ctx, label, fonts_get_system_font(SYS_FONT_14),
                            GRect(i * bar_w, chart_h, bar_w, label_h),
                            GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
     }

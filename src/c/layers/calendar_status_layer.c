@@ -3,10 +3,17 @@
 #include "c/appendix/config.h"
 #include "c/appendix/memory_log.h"
 
+#if defined(PBL_PLATFORM_EMERY)
+#define MONTH_FONT_OFFSET 9
+#define BATTERY_W 40
+#define BATTERY_H 14
+#define PADDING 5
+#else
 #define MONTH_FONT_OFFSET 7
 #define BATTERY_W 29
 #define BATTERY_H 10
 #define PADDING 4
+#endif
 #define ICON_SLOT_1 GRect(PADDING, 0, 10, 10)
 #define ICON_SLOT_2 GRect(PADDING * 2 + 10, 0, 10, 10)
 
@@ -110,7 +117,7 @@ void calendar_status_layer_create(Layer* parent_layer, GRect frame) {
     text_layer_set_background_color(s_calendar_month_layer, GColorClear);
     text_layer_set_text_alignment(s_calendar_month_layer, GTextAlignmentCenter);
     text_layer_set_text_color(s_calendar_month_layer, GColorWhite);
-    text_layer_set_font(s_calendar_month_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18));
+    text_layer_set_font(s_calendar_month_layer, fonts_get_system_font(SYS_FONT_18));
     MEMORY_HEAP_PROBE_SAMPLE("after_month_text_layer", &probe);
 
     // Set up bluetooth handler

@@ -4,6 +4,19 @@
 #include "c/appendix/config.h"
 #include "c/appendix/memory_log.h"
 
+#if defined(PBL_PLATFORM_EMERY)
+#define LEFT_AXIS_LABEL_STRIP_MIN_W 21
+#define LEFT_AXIS_LABEL_TO_GRAPH_GAP 3
+#define LEFT_AXIS_GRAPH_INSET_DEFAULT (LEFT_AXIS_LABEL_STRIP_MIN_W + LEFT_AXIS_LABEL_TO_GRAPH_GAP)
+#define TEMP_LABEL_PAD 3
+#define TEMP_LABEL_H 27
+#define TEMP_LABEL_MEASURE_BOX_W 200
+#define TEMP_LABEL_MEASURE_BOX_H 40
+#define BOTTOM_AXIS_FONT_OFFSET 5
+#define LABEL_PADDING 28
+#define BOTTOM_AXIS_H 14
+#define MARGIN_TEMP_H 10
+#else
 #define LEFT_AXIS_LABEL_STRIP_MIN_W 15
 #define LEFT_AXIS_LABEL_TO_GRAPH_GAP 2
 #define LEFT_AXIS_GRAPH_INSET_DEFAULT (LEFT_AXIS_LABEL_STRIP_MIN_W + LEFT_AXIS_LABEL_TO_GRAPH_GAP)
@@ -15,6 +28,7 @@
 #define LABEL_PADDING 20          // Minimum width a label should cover
 #define BOTTOM_AXIS_H 10          // Height of the bottom axis (hour labels)
 #define MARGIN_TEMP_H 7           // Height of margins for the temperature plot
+#endif
 #define NIGHT_HATCH_SPACING PBL_IF_COLOR_ELSE(6, 7)
 #define NIGHT_HATCH_COLOR GColorDarkGray
 #define PRECIP_FILL_COLOR PBL_IF_COLOR_ELSE(GColorCobaltBlue, GColorLightGray)
@@ -520,7 +534,7 @@ static void forecast_update_proc(Layer *layer, GContext *ctx)
             char buf[4];
             snprintf(buf, sizeof(buf), "%d", config_axis_hour(forecast_start_local->tm_hour + i));
             graphics_draw_text(ctx, buf,
-                               fonts_get_system_font(FONT_KEY_GOTHIC_14),
+                               fonts_get_system_font(SYS_FONT_14),
                                GRect(entry_x - 20, h - BOTTOM_AXIS_H - BOTTOM_AXIS_FONT_OFFSET, 40, BOTTOM_AXIS_H),
                                GTextOverflowModeWordWrap,
                                GTextAlignmentCenter,
@@ -597,11 +611,11 @@ static void forecast_update_proc(Layer *layer, GContext *ctx)
     graphics_draw_line(ctx, GPoint(graph_bounds.origin.x, 0), GPoint(graph_bounds.origin.x, axis_y));
     graphics_context_set_text_color(ctx, GColorWhite);
     graphics_draw_text(ctx, s_buffer_hi,
-                       fonts_get_system_font(FONT_KEY_GOTHIC_18),
+                       fonts_get_system_font(SYS_FONT_18),
                        GRect(0, -3, s_label_strip_w, TEMP_LABEL_H),
                        GTextOverflowModeFill, GTextAlignmentRight, NULL);
     graphics_draw_text(ctx, s_buffer_lo,
-                       fonts_get_system_font(FONT_KEY_GOTHIC_18),
+                       fonts_get_system_font(SYS_FONT_18),
                        GRect(0, 22, s_label_strip_w, TEMP_LABEL_H),
                        GTextOverflowModeFill, GTextAlignmentRight, NULL);
     MEMORY_HEAP_PROBE_LOG_MIN(&redraw_probe);
@@ -610,7 +624,7 @@ static void forecast_update_proc(Layer *layer, GContext *ctx)
 
 static int temp_label_string_width(const char *text)
 {
-    const GFont font = fonts_get_system_font(FONT_KEY_GOTHIC_18);
+    const GFont font = fonts_get_system_font(SYS_FONT_18);
     const GRect box = GRect(0, 0, TEMP_LABEL_MEASURE_BOX_W, TEMP_LABEL_MEASURE_BOX_H);
     const GSize sz = graphics_text_layout_get_content_size(text, font, box, GTextOverflowModeFill,
                                                            GTextAlignmentRight);

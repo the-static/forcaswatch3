@@ -5,7 +5,11 @@
 
 #define NUM_WEEKS 3
 #define DAYS_PER_WEEK 7
+#if defined(PBL_PLATFORM_EMERY)
+#define FONT_OFFSET 7
+#else
 #define FONT_OFFSET 5
+#endif
 
 static Layer *s_calendar_layer;
 
@@ -126,7 +130,7 @@ static void calendar_update_proc(Layer *layer, GContext *ctx) {
         graphics_context_set_text_color(ctx, text_color);
         graphics_draw_text(ctx,
             (snprintf(buffer, sizeof(buffer), "%d", t.tm_mday), buffer),
-            fonts_get_system_font(bold ? FONT_KEY_GOTHIC_18_BOLD : FONT_KEY_GOTHIC_18),
+            fonts_get_system_font(bold ? SYS_FONT_18_BOLD : SYS_FONT_18),
             calendar_cell_rect(bounds, i), GTextOverflowModeFill, GTextAlignmentCenter, NULL);
     }
 }

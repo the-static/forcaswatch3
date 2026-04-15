@@ -2,12 +2,21 @@
 #include "c/appendix/persist.h"
 #include "c/appendix/memory_log.h"
 
+#if defined(PBL_PLATFORM_EMERY)
+#define BATTERY_NUB_W 3
+#define BATTERY_NUB_H 8
+#define BATTERY_STROKE 1
+#define FILL_PADDING 1
+#define ICON_SPACING 4
+#define BATTERY_POWER_ICON_W 10
+#else
 #define BATTERY_NUB_W 2
 #define BATTERY_NUB_H 6
 #define BATTERY_STROKE 1
 #define FILL_PADDING 1
 #define ICON_SPACING 3
 #define BATTERY_POWER_ICON_W 7
+#endif
 
 
 static Layer *s_battery_layer;
