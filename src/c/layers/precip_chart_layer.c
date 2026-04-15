@@ -15,7 +15,11 @@ static void precip_chart_update_proc(Layer *layer, GContext *ctx) {
     persist_get_temp_7day_lo(temps_lo);
 
     int bar_w = bounds.size.w / 7;
+#if defined(PBL_PLATFORM_EMERY)
+    int label_h = 24;
+#else
     int label_h = 16;
+#endif
     int chart_h = bounds.size.h - label_h; 
 
     // Draw baseline
@@ -49,17 +53,26 @@ static void precip_chart_update_proc(Layer *layer, GContext *ctx) {
             snprintf(hi_str, sizeof(hi_str), "%d", loc_hi);
             snprintf(lo_str, sizeof(lo_str), "%d", loc_lo);
             
-            int hi_y = 2;
+#if defined(PBL_PLATFORM_EMERY)
+            int hi_y = -4;
+            int lo_y = chart_h - 26;
+            int temp_height = 28;
+            const char* temp_font = SYS_FONT_18;
+#else
+            int hi_y = -2;
             int lo_y = chart_h - 16;
+            int temp_height = 14;
+            const char* temp_font = SYS_FONT_14;
+#endif
             
-            // Draw hi temp to the right of the bar
-            graphics_draw_text(ctx, hi_str, fonts_get_system_font(SYS_FONT_14),
-                               GRect(i * bar_w + 7, hi_y, bar_w - 7, 14),
+            // Draw hi temp perfectly centered in the empty space between this and the next precip bar
+            graphics_draw_text(ctx, hi_str, fonts_get_system_font(temp_font),
+                               GRect(i * bar_w, hi_y, bar_w + 8, temp_height),
                                GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
             
-            // Draw lo temp to the right of the bar
-            graphics_draw_text(ctx, lo_str, fonts_get_system_font(SYS_FONT_14),
-                               GRect(i * bar_w + 7, lo_y, bar_w - 7, 14),
+            // Draw lo temp perfectly centered in the empty space between this and the next precip bar
+            graphics_draw_text(ctx, lo_str, fonts_get_system_font(temp_font),
+                               GRect(i * bar_w, lo_y, bar_w + 8, temp_height),
                                GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
         }
 

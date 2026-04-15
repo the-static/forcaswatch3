@@ -6,9 +6,27 @@ static Layer *s_weather_summary_layer;
 static TextLayer *s_detail_layer;
 static TextLayer *s_temp_layer;
 
+#if defined(PBL_PLATFORM_EMERY)
+#define WIND_ARROW_SCALE_X 11
+#define WIND_ARROW_SCALE_Y 16
+#define WIND_ARROW_MID_Y 7
+#define MOON_RADIUS 9
+#define MOON_X_OFFSET 20
+#define MOON_Y_OFFSET 42
+#define ARROW_Y_OFFSET 16
+#else
+#define WIND_ARROW_SCALE_X 8
+#define WIND_ARROW_SCALE_Y 12
+#define WIND_ARROW_MID_Y 5
+#define MOON_RADIUS 6
+#define MOON_X_OFFSET 15
+#define MOON_Y_OFFSET 30
+#define ARROW_Y_OFFSET 12
+#endif
+
 static const GPathInfo WIND_ARROW_POINTS = {
   .num_points = 4,
-  .points = (GPoint []) {{0, -12}, {8, 12}, {0, 5}, {-8, 12}}
+  .points = (GPoint []) {{0, -WIND_ARROW_SCALE_Y}, {WIND_ARROW_SCALE_X, WIND_ARROW_SCALE_Y}, {0, WIND_ARROW_MID_Y}, {-WIND_ARROW_SCALE_X, WIND_ARROW_SCALE_Y}}
 };
 static GPath *s_wind_arrow_path;
 
@@ -19,7 +37,7 @@ static void weather_summary_layer_update_proc(Layer *layer, GContext *ctx) {
     int wind_deg = persist_get_wind_deg();
     s_wind_arrow_path = gpath_create(&WIND_ARROW_POINTS);
     // Position it to the right of the wind text
-    gpath_move_to(s_wind_arrow_path, GPoint(bounds.size.w - 15, 12)); 
+    gpath_move_to(s_wind_arrow_path, GPoint(bounds.size.w - MOON_X_OFFSET, ARROW_Y_OFFSET)); 
     gpath_rotate_to(s_wind_arrow_path, DEG_TO_TRIGANGLE(wind_deg));
     
     graphics_context_set_fill_color(ctx, GColorWhite);
@@ -32,8 +50,8 @@ static void weather_summary_layer_update_proc(Layer *layer, GContext *ctx) {
     while (diff < 0) diff += 2551443;
     int phase = (diff % 2551443) * 28 / 2551443; // 0 to 27
     
-    GPoint moon_center = GPoint(bounds.size.w - 15, 30);
-    int r = 6;
+    GPoint moon_center = GPoint(bounds.size.w - MOON_X_OFFSET, MOON_Y_OFFSET);
+    int r = MOON_RADIUS;
     
     graphics_context_set_fill_color(ctx, GColorWhite);
     graphics_fill_circle(ctx, moon_center, r);
@@ -80,6 +98,15 @@ void weather_summary_layer_create(Layer* parent_layer, GRect frame) {
     s_weather_summary_layer = layer_create(frame);
     GRect bounds = layer_get_bounds(s_weather_summary_layer);
 
+#if defined(PBL_PLATFORM_EMERY)
+    s_temp_layer = text_layer_create(GRect(0, 0, bounds.size.w, 30)); // Used for Wind
+    text_layer_set_background_color(s_temp_layer, GColorClear);
+    text_layer_set_text_color(s_temp_layer, GColorWhite);
+    text_layer_set_font(s_temp_layer, fonts_get_system_font(SYS_FONT_18));
+    text_layer_set_text_alignment(s_temp_layer, GTextAlignmentLeft);
+
+    s_detail_layer = text_layer_create(GRect(0, 26, bounds.size.w, 30)); // Used for Humidity
+#else
     s_temp_layer = text_layer_create(GRect(0, 0, bounds.size.w, 24)); // Used for Wind
     text_layer_set_background_color(s_temp_layer, GColorClear);
     text_layer_set_text_color(s_temp_layer, GColorWhite);
@@ -87,6 +114,7 @@ void weather_summary_layer_create(Layer* parent_layer, GRect frame) {
     text_layer_set_text_alignment(s_temp_layer, GTextAlignmentLeft);
 
     s_detail_layer = text_layer_create(GRect(0, 20, bounds.size.w, 18)); // Used for Humidity
+#endif
     text_layer_set_background_color(s_detail_layer, GColorClear);
     text_layer_set_text_color(s_detail_layer, GColorWhite);
     text_layer_set_font(s_detail_layer, fonts_get_system_font(SYS_FONT_18));
@@ -121,8 +149,13 @@ void weather_summary_layer_refresh() {
     
     // Reposition wind text to make room for arrow
     GRect bounds = layer_get_bounds(s_weather_summary_layer);
+#if defined(PBL_PLATFORM_EMERY)
+    layer_set_frame(text_layer_get_layer(s_temp_layer), GRect(4, 0, bounds.size.w - 24, 30));
+    layer_set_frame(text_layer_get_layer(s_detail_layer), GRect(4, 26, bounds.size.w - 24, 30));
+#else
     layer_set_frame(text_layer_get_layer(s_temp_layer), GRect(4, 0, bounds.size.w - 24, 24));
     layer_set_frame(text_layer_get_layer(s_detail_layer), GRect(4, 20, bounds.size.w - 24, 18));
+#endif
     text_layer_set_text_alignment(s_temp_layer, GTextAlignmentLeft);
 
     static char s_hum_buffer[32];

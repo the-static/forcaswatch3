@@ -8,14 +8,16 @@
 #define BATTERY_W 40
 #define BATTERY_H 14
 #define PADDING 5
+#define STATUS_ICON 14
 #else
 #define MONTH_FONT_OFFSET 7
 #define BATTERY_W 29
 #define BATTERY_H 10
 #define PADDING 4
+#define STATUS_ICON 10
 #endif
-#define ICON_SLOT_1 GRect(PADDING, 0, 10, 10)
-#define ICON_SLOT_2 GRect(PADDING * 2 + 10, 0, 10, 10)
+#define ICON_SLOT_1 GRect(PADDING, 0, STATUS_ICON, STATUS_ICON)
+#define ICON_SLOT_2 GRect(PADDING * 2 + STATUS_ICON, 0, STATUS_ICON, STATUS_ICON)
 
 static Layer *s_calendar_status_layer;
 static TextLayer *s_calendar_month_layer;
@@ -96,10 +98,10 @@ static void calendar_status_update_proc(Layer *layer, GContext *ctx) {
 
     if (show_bt) {
         ensure_bt_bitmap_loaded();
-        draw_bitmap(ctx, s_bt_bitmap, GRect(icon_x, 0, 10, 10));
+        draw_bitmap(ctx, s_bt_bitmap, GRect(icon_x, 0, STATUS_ICON, STATUS_ICON));
     } else if (show_bt_disconnect) {
         ensure_bt_disconnect_bitmap_loaded();
-        draw_bitmap(ctx, s_bt_disconnect_bitmap, GRect(icon_x, 0, 10, 10));
+        draw_bitmap(ctx, s_bt_disconnect_bitmap, GRect(icon_x, 0, STATUS_ICON, STATUS_ICON));
     }
 }
 
