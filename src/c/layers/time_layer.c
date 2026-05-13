@@ -32,8 +32,8 @@ void time_layer_create(Layer* parent_layer, GRect frame) {
 
     // Main time formatting
     text_layer_set_background_color(s_time_layer, GColorClear);
-    text_layer_set_text(s_time_layer, "00:00");
-    text_layer_set_text_alignment(s_time_layer, GTextAlignmentLeft);
+    text_layer_set_text(s_time_layer, "00:00:00");
+    text_layer_set_text_alignment(s_time_layer, GTextAlignmentCenter);
 
     // AM/PM formatting
     text_layer_set_font(s_am_pm_layer, fonts_get_system_font(SYS_FONT_18));
@@ -78,10 +78,26 @@ void time_layer_tick() {
         text_layer_set_text(s_am_pm_layer, tick_time->tm_hour < 12 ? "AM" : "PM");
     }
     
+    // Create a measurement string to stabilize the layout (prevent shifting on every second)
+    static char s_measure_buffer[12];
+    strcpy(s_measure_buffer, s_buffer);
+    for (int i = 0; s_measure_buffer[i] != '\0'; i++) {
+        if (s_measure_buffer[i] >= '0' && s_measure_buffer[i] <= '9') {
+            s_measure_buffer[i] = '0';
+        }
+    }
+    
+    // Temporarily set the text to the 0-filled version to get the max stable width
+    text_layer_set_text(s_time_layer, s_measure_buffer);
+
     // Reposition everything
     GRect bounds = layer_get_bounds(text_layer_get_layer(s_container_layer));
     text_layer_move_frame(s_time_layer, GRect(0, 0, bounds.size.w, bounds.size.h)); // Reset for size calculation
     GSize time_size = text_layer_get_content_size(s_time_layer);
+    
+    // Restore the actual text
+    text_layer_set_text(s_time_layer, s_buffer);
+
     GSize am_pm_size = text_layer_get_content_size(s_am_pm_layer);
 
     // Calculate some landmarks
