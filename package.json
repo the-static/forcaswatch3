@@ -22,7 +22,7 @@
       "emery"
     ],
     "watchapp": {
-      "watchface": true
+      "watchface": false
     },
     "resources": {
       "media": [
