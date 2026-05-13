@@ -63,11 +63,11 @@ void time_layer_tick() {
     struct tm *tick_time = s_zulu_time ? gmtime(&temp) : localtime(&temp);
 
     // Format the time into a buffer
-    static char s_buffer[8];
+    static char s_buffer[12];
     if (s_zulu_time) {
-        strftime(s_buffer, sizeof(s_buffer), "%H:%M", tick_time);
+        strftime(s_buffer, sizeof(s_buffer), "%H:%M:%S", tick_time);
     } else {
-        config_format_time(s_buffer, 8, tick_time);
+        config_format_time(s_buffer, 12, tick_time);
     }
 
     // Update the time and AM/PM indicator

@@ -66,7 +66,7 @@ int config_localize_temp(int temp_f) {
 }
 
 int config_format_time(char *s, size_t maxsize, const struct tm * tm_p) {
-    int res = strftime(s, maxsize, clock_is_24h_style() ? "%H:%M" : "%I:%M", tm_p);
+    int res = strftime(s, maxsize, clock_is_24h_style() ? "%H:%M:%S" : "%I:%M:%S", tm_p);
     if (!g_config->time_lead_zero) {
         // Remove leading zero if configured as such
         if (s[0] == '0') 

@@ -100,7 +100,7 @@ static void main_window_unload(Window *window) {
     MEMORY_LOG_HEAP("after_window_unload");
 }
 
-static void minute_handler(struct tm *tick_time, TimeUnits units_changed) {
+static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
     time_layer_tick();
     /* tm_hour==0 missed day changes from emulator time jumps (same clock, new date). */
     if (units_changed & DAY_UNIT) {
@@ -201,7 +201,7 @@ void main_window_create() {
     window_set_click_config_provider(s_main_window, click_config_provider);
 
     // Register with TickTimerService
-    tick_timer_service_subscribe(MINUTE_UNIT | DAY_UNIT, minute_handler);
+    tick_timer_service_subscribe(SECOND_UNIT, tick_handler);
 #if defined(PBL_PLATFORM_EMERY)
     if (touch_service_is_enabled()) {
         touch_service_subscribe(touch_handler, NULL);
