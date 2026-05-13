@@ -145,6 +145,21 @@ static void touch_handler(const TouchEvent *event, void *context) {
     }
 }
 
+static void up_click_handler(ClickRecognizerRef recognizer, void *context) {
+    s_target_top_content = (s_target_top_content == TOP_CONTENT_CALENDAR) ? TOP_CONTENT_WEATHER : TOP_CONTENT_CALENDAR;
+    main_window_refresh();
+}
+
+static void down_click_handler(ClickRecognizerRef recognizer, void *context) {
+    s_target_bottom_content = (s_target_bottom_content == BOTTOM_CONTENT_FORECAST) ? BOTTOM_CONTENT_PRECIP : BOTTOM_CONTENT_FORECAST;
+    main_window_refresh();
+}
+
+static void click_config_provider(void *context) {
+    window_single_click_subscribe(BUTTON_ID_UP, up_click_handler);
+    window_single_click_subscribe(BUTTON_ID_DOWN, down_click_handler);
+}
+
 /*----------------------------
 -------- EXTERNAL ------------
 ----------------------------*/
@@ -158,6 +173,8 @@ void main_window_create() {
         .load = main_window_load,
         .unload = main_window_unload
     });
+    
+    window_set_click_config_provider(s_main_window, click_config_provider);
 
     // Register with TickTimerService
     tick_timer_service_subscribe(MINUTE_UNIT | DAY_UNIT, minute_handler);
