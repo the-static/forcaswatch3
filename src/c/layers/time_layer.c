@@ -33,17 +33,17 @@ void time_layer_create(Layer* parent_layer, GRect frame) {
     // Main time formatting
     text_layer_set_background_color(s_time_layer, GColorClear);
     text_layer_set_text(s_time_layer, "00:00:00");
-    text_layer_set_text_alignment(s_time_layer, GTextAlignmentCenter);
+    text_layer_set_text_alignment(s_time_layer, GTextAlignmentLeft);
 
     // AM/PM formatting
     text_layer_set_font(s_am_pm_layer, fonts_get_system_font(SYS_FONT_18));
     text_layer_set_background_color(s_am_pm_layer, GColorClear);
     text_layer_set_text_color(s_am_pm_layer, GColorWhite);
     text_layer_set_text(s_am_pm_layer, "PM");
-    text_layer_set_text_alignment(s_am_pm_layer, GTextAlignmentLeft);
+    text_layer_set_text_alignment(s_am_pm_layer, GTextAlignmentRight);
 
     layer_add_child(text_layer_get_layer(s_container_layer), text_layer_get_layer(s_time_layer));
-    layer_add_child(text_layer_get_layer(s_time_layer), text_layer_get_layer(s_am_pm_layer));
+    layer_add_child(text_layer_get_layer(s_container_layer), text_layer_get_layer(s_am_pm_layer));
     layer_add_child(parent_layer, text_layer_get_layer(s_container_layer));
     MEMORY_LOG_HEAP("after_time_layer_create");
 
@@ -78,39 +78,22 @@ void time_layer_tick() {
         text_layer_set_text(s_am_pm_layer, tick_time->tm_hour < 12 ? "AM" : "PM");
     }
     
-    // Create a measurement string to stabilize the layout (prevent shifting on every second)
-    static char s_measure_buffer[12];
-    strcpy(s_measure_buffer, s_buffer);
-    for (int i = 0; s_measure_buffer[i] != '\0'; i++) {
-        if (s_measure_buffer[i] >= '0' && s_measure_buffer[i] <= '9') {
-            s_measure_buffer[i] = '0';
-        }
-    }
-    
-    // Temporarily set the text to the 0-filled version to get the max stable width
-    text_layer_set_text(s_time_layer, s_measure_buffer);
-
     // Reposition everything
     GRect bounds = layer_get_bounds(text_layer_get_layer(s_container_layer));
     text_layer_move_frame(s_time_layer, GRect(0, 0, bounds.size.w, bounds.size.h)); // Reset for size calculation
     GSize time_size = text_layer_get_content_size(s_time_layer);
-    
-    // Restore the actual text
-    text_layer_set_text(s_time_layer, s_buffer);
-
-    GSize am_pm_size = text_layer_get_content_size(s_am_pm_layer);
 
     // Calculate some landmarks
     bool show_suffix = s_zulu_time || g_config->show_am_pm;
-    int content_w = time_size.w + (show_suffix ? am_pm_size.w : 0);
     int text_h = time_size.h - MT_TIME; // Remove top margin, approximately
     int text_top = -MT_TIME + (bounds.size.h/2 - text_h/2);
-    int text_left = bounds.size.w / 2 - content_w / 2;
+    int padding = 5;
 
     // Update layer positions and visibility
-    text_layer_move_frame(s_time_layer, GRect(text_left, text_top, content_w, time_size.h));
-    if (show_suffix)
-        text_layer_move_frame(s_am_pm_layer, GRect(time_size.w, MT_TIME - MT_AM_PM, 30, time_size.h));
+    text_layer_move_frame(s_time_layer, GRect(padding, text_top, bounds.size.w - 35 - padding, time_size.h));
+    if (show_suffix) {
+        text_layer_move_frame(s_am_pm_layer, GRect(bounds.size.w - 35 - padding, text_top + MT_TIME - MT_AM_PM, 35, time_size.h));
+    }
     layer_set_hidden(text_layer_get_layer(s_am_pm_layer), !show_suffix);
 }
 
