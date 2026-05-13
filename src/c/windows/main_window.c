@@ -160,10 +160,16 @@ void main_window_create() {
 
     // Register with TickTimerService
     tick_timer_service_subscribe(MINUTE_UNIT | DAY_UNIT, minute_handler);
-    accel_tap_service_subscribe(tap_handler);
 #if defined(PBL_PLATFORM_EMERY)
-    touch_service_subscribe(touch_handler, NULL);
+    if (touch_service_is_enabled()) {
+        touch_service_subscribe(touch_handler, NULL);
+    } else {
+        accel_tap_service_subscribe(tap_handler);
+    }
+#else
+    accel_tap_service_subscribe(tap_handler);
 #endif
+
 
     // Show the window on the watch with animated=true
     window_stack_push(s_main_window, true);
@@ -236,9 +242,14 @@ void main_window_refresh() {
 }
 
 void main_window_destroy() {
-    accel_tap_service_unsubscribe();
 #if defined(PBL_PLATFORM_EMERY)
-    touch_service_unsubscribe();
+    if (touch_service_is_enabled()) {
+        touch_service_unsubscribe();
+    } else {
+        accel_tap_service_unsubscribe();
+    }
+#else
+    accel_tap_service_unsubscribe();
 #endif
     // Interface for destroying the main window (implicitly unloads contents)
     window_destroy(s_main_window);
