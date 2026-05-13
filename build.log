@@ -1,0 +1,59 @@
+[build] $ scripts/build.sh
+Set active SDK to 4.5.
+
+[1m[33mA new SDK is available: v4.9.169 (current: v4.5)[0m
+[33m  Update with: pebble sdk install latest[0m
+
+[1m[33mA new pebble-tool is available: v5.0.35 (current: v5.0.31)[0m
+[33m  Update with: uv tool upgrade pebble-tool[0m
+prepared package.json using profiles/package.dev.json
+
+up to date, audited 2 packages in 307ms
+
+found 0 vulnerabilities
+
+up to date, audited 2 packages in 301ms
+
+found 0 vulnerabilities
+Setting top to                           : /home/static/forcaswatch3NEW/forcaswatch3 
+Setting out to                           : /home/static/forcaswatch3NEW/forcaswatch3/build 
+Checking for program webpack             : /home/static/.pebble-sdk/SDKs/current/node_modules/.bin/webpack 
+Found Pebble SDK for emery in:           : /home/static/.pebble-sdk/SDKs/current/sdk-core/pebble/emery 
+Checking for program gcc,cc              : arm-none-eabi-gcc 
+Checking for program ar                  : arm-none-eabi-ar 
+Found Pebble SDK for diorite in:         : /home/static/.pebble-sdk/SDKs/current/sdk-core/pebble/diorite 
+Checking for program gcc,cc              : arm-none-eabi-gcc 
+Checking for program ar                  : arm-none-eabi-ar 
+Found Pebble SDK for basalt in:          : /home/static/.pebble-sdk/SDKs/current/sdk-core/pebble/basalt 
+Checking for program gcc,cc              : arm-none-eabi-gcc 
+Checking for program ar                  : arm-none-eabi-ar 
+Found Pebble SDK for aplite in:          : /home/static/.pebble-sdk/SDKs/current/sdk-core/pebble/aplite 
+Checking for program gcc,cc              : arm-none-eabi-gcc 
+Checking for program ar                  : arm-none-eabi-ar 
+'configure' finished successfully (0.025s)
+Waf: Entering directory `/home/static/forcaswatch3NEW/forcaswatch3/build'
+[ 33/141] emery | c: src/c/windows/main_window.c -> build/src/c/windows/main_window.c.30.o
+../src/c/windows/main_window.c:130:1: error: unknown type name 'TouchEvent'
+../src/c/windows/main_window.c: In function 'touch_handler':
+../src/c/windows/main_window.c:133:14: error: request for member 'type' in something not a structure or union
+../src/c/windows/main_window.c:133:24: error: 'TouchEvent_Touchdown' undeclared (first use in this function)
+../src/c/windows/main_window.c:133:24: note: each undeclared identifier is reported only once for each function it appears in
+../src/c/windows/main_window.c:138:18: error: request for member 'y' in something not a structure or union
+../src/c/windows/main_window.c: In function 'main_window_create':
+../src/c/windows/main_window.c:165:5: error: implicit declaration of function 'touch_service_subscribe' [-Werror=implicit-function-declaration]
+../src/c/windows/main_window.c: In function 'main_window_destroy':
+../src/c/windows/main_window.c:241:5: error: implicit declaration of function 'touch_service_unsubscribe' [-Werror=implicit-function-declaration]
+cc1: all warnings being treated as errors
+Waf: Leaving directory `/home/static/forcaswatch3NEW/forcaswatch3/build'
+Build failed
+ -> task in 'emery/pebble-app.elf' failed (exit status 1): 
+	{task 133150227168576: c main_window.c -> main_window.c.30.o}
+['arm-none-eabi-gcc', '-std=c99', '-mcpu=cortex-m3', '-mthumb', '-ffunction-sections', '-fdata-sections', '-g', '-fPIE', '-Os', '-D_TIME_H_', '-Wall', '-Wextra', '-Werror', '-Wno-unused-parameter', '-Wno-error=unused-function', '-Wno-error=unused-variable', '-I/home/static/.pebble-sdk/SDKs/current/sdk-core/pebble/emery/include', '-I/home/static/forcaswatch3NEW/forcaswatch3/build', '-I/home/static/forcaswatch3NEW/forcaswatch3', '-I/home/static/forcaswatch3NEW/forcaswatch3/build/include', '-I/home/static/forcaswatch3NEW/forcaswatch3/include', '-I/home/static/forcaswatch3NEW/forcaswatch3/build/src', '-I/home/static/forcaswatch3NEW/forcaswatch3/src', '-I/home/static/forcaswatch3NEW/forcaswatch3/build/emery', '-I/home/static/forcaswatch3NEW/forcaswatch3/emery', '-DRELEASE', '-DPBL_PLATFORM_EMERY', '-DPBL_COLOR', '-DPBL_RECT', '-DPBL_MICROPHONE', '-DPBL_SMARTSTRAP', '-DPBL_HEALTH', '-DPBL_SMARTSTRAP_POWER', '-DPBL_COMPASS', '-DPBL_DISPLAY_WIDTH=200', '-DPBL_DISPLAY_HEIGHT=228', '-DPBL_SDK_3', '-D__FILE_NAME__="main_window.c"', '../src/c/windows/main_window.c', '-c', '-o', 'src/c/windows/main_window.c.30.o']
+Build failed.
+
+[1m[33mA new SDK is available: v4.9.169 (current: v4.5)[0m
+[33m  Update with: pebble sdk install latest[0m
+
+[1m[33mA new pebble-tool is available: v5.0.35 (current: v5.0.31)[0m
+[33m  Update with: uv tool upgrade pebble-tool[0m
+[build] ERROR task failed
