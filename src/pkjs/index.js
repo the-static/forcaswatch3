@@ -59,7 +59,21 @@ Pebble.addEventListener('appmessage', function(e) {
     if (hasForecastData) {
         console.log('Watch reported valid forecast data at startup.');
         app.pendingStartupFetch = false;
-        return;
+        
+        var lastFetchSuccessString = localStorage.getItem(KEY_LAST_FETCH_SUCCESS);
+        if (lastFetchSuccessString !== null) {
+            var lastFetchSuccess = JSON.parse(lastFetchSuccessString);
+            if (lastFetchSuccess.time !== null) {
+                if (Date.now() - new Date(lastFetchSuccess.time).getTime() > 1000 * 60 * 10) {
+                    console.log('Forecast data is > 10 minutes old at startup, forcing fetch.');
+                    app.pendingStartupFetch = true;
+                }
+            }
+        }
+        
+        if (!app.pendingStartupFetch) {
+            return;
+        }
     }
 
     console.log('Watch reported no forecast data at startup.');
