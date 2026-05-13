@@ -130,9 +130,10 @@ static void tap_handler(AccelAxisType axis, int32_t direction) {
 static void touch_handler(const TouchEvent *event, void *context) {
     if (s_tap_locked) return;
     
-    if (event->type == TouchEvent_Touchdown) {
+    if (event->type == TouchEvent_Touchdown || event->type == TouchEvent_Liftoff) {
         s_tap_locked = true;
         app_timer_register(1000, tap_unlock_callback, NULL);
+        vibes_short_pulse();
 
         GRect bounds = layer_get_bounds(s_window_layer);
         if (event->y < bounds.size.h / 2) {
