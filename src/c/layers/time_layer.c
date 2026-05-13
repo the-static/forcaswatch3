@@ -14,6 +14,7 @@
 
 static TextLayer *s_container_layer;
 static TextLayer *s_time_layer;
+static TextLayer *s_seconds_layer;
 static TextLayer *s_am_pm_layer;
 
 static bool s_zulu_time = false;
@@ -42,7 +43,16 @@ void time_layer_create(Layer* parent_layer, GRect frame) {
     text_layer_set_text(s_am_pm_layer, "PM");
     text_layer_set_text_alignment(s_am_pm_layer, GTextAlignmentRight);
 
+    // Seconds formatting
+    s_seconds_layer = text_layer_create(GRect(0, 0, 30, frame.size.h));
+    text_layer_set_font(s_seconds_layer, fonts_get_system_font(SYS_FONT_24));
+    text_layer_set_background_color(s_seconds_layer, GColorClear);
+    text_layer_set_text_color(s_seconds_layer, GColorWhite);
+    text_layer_set_text(s_seconds_layer, ":00");
+    text_layer_set_text_alignment(s_seconds_layer, GTextAlignmentLeft);
+
     layer_add_child(text_layer_get_layer(s_container_layer), text_layer_get_layer(s_time_layer));
+    layer_add_child(text_layer_get_layer(s_container_layer), text_layer_get_layer(s_seconds_layer));
     layer_add_child(text_layer_get_layer(s_container_layer), text_layer_get_layer(s_am_pm_layer));
     layer_add_child(parent_layer, text_layer_get_layer(s_container_layer));
     MEMORY_LOG_HEAP("after_time_layer_create");
@@ -63,15 +73,20 @@ void time_layer_tick() {
     struct tm *tick_time = s_zulu_time ? gmtime(&temp) : localtime(&temp);
 
     // Format the time into a buffer
-    static char s_buffer[12];
+    static char s_buffer[8];
     if (s_zulu_time) {
-        strftime(s_buffer, sizeof(s_buffer), "%H:%M:%S", tick_time);
+        strftime(s_buffer, sizeof(s_buffer), "%H:%M", tick_time);
     } else {
-        config_format_time(s_buffer, 12, tick_time);
+        config_format_time(s_buffer, 8, tick_time);
     }
+
+    // Format the seconds
+    static char s_sec_buffer[4];
+    strftime(s_sec_buffer, sizeof(s_sec_buffer), ":%S", tick_time);
 
     // Update the time and AM/PM indicator
     text_layer_set_text(s_time_layer, s_buffer);
+    text_layer_set_text(s_seconds_layer, s_sec_buffer);
     if (s_zulu_time) {
         text_layer_set_text(s_am_pm_layer, "Z");
     } else if (g_config->show_am_pm) {
@@ -90,7 +105,9 @@ void time_layer_tick() {
     int padding = 5;
 
     // Update layer positions and visibility
-    text_layer_move_frame(s_time_layer, GRect(padding, text_top, bounds.size.w - 35 - padding, time_size.h));
+    text_layer_move_frame(s_time_layer, GRect(padding, text_top, time_size.w, time_size.h));
+    text_layer_move_frame(s_seconds_layer, GRect(padding + time_size.w, text_top + MT_TIME - 14, 35, time_size.h));
+    
     if (show_suffix) {
         text_layer_move_frame(s_am_pm_layer, GRect(bounds.size.w - 35 - padding, text_top + MT_TIME - MT_AM_PM, 35, time_size.h));
     }
@@ -109,6 +126,8 @@ void time_layer_destroy() {
     MEMORY_LOG_HEAP("time_layer_destroy:before");
     text_layer_destroy(s_time_layer);
     s_time_layer = NULL;
+    text_layer_destroy(s_seconds_layer);
+    s_seconds_layer = NULL;
     text_layer_destroy(s_container_layer);
     s_container_layer = NULL;
     MEMORY_LOG_HEAP("time_layer_destroy:after");
