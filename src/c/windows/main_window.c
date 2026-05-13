@@ -37,6 +37,7 @@ static int16_t s_drawn_top_content = -1;
 static int16_t s_drawn_bottom_content = -1;
 static int16_t s_last_config_top_content;
 
+static void reset_idle_timer();
 
 static void main_window_load(Window *window) {
     // Get information about the Window
@@ -82,6 +83,7 @@ static void main_window_load(Window *window) {
             GRect(0, h - FORECAST_HEIGHT - WEATHER_STATUS_HEIGHT, w, FORECAST_HEIGHT + WEATHER_STATUS_HEIGHT));
     loading_layer_refresh();
     app_message_send_startup_state(loading_layer_has_valid_data());
+    reset_idle_timer();
     MEMORY_LOG_HEAP("after_window_load");
 }
 
@@ -111,6 +113,20 @@ static void minute_handler(struct tm *tick_time, TimeUnits units_changed) {
     loading_layer_refresh();
 }
 
+static AppTimer *s_idle_timer = NULL;
+
+static void idle_timer_callback(void *data) {
+    s_idle_timer = NULL;
+    window_stack_pop_all(true);
+}
+
+static void reset_idle_timer() {
+    if (s_idle_timer) {
+        app_timer_cancel(s_idle_timer);
+    }
+    s_idle_timer = app_timer_register(30000, idle_timer_callback, NULL);
+}
+
 static bool s_tap_locked = false;
 
 static void tap_unlock_callback(void *data) {
@@ -128,6 +144,7 @@ static void tap_handler(AccelAxisType axis, int32_t direction) {
 }
 
 static void touch_handler(const TouchEvent *event, void *context) {
+    reset_idle_timer();
     if (s_tap_locked) return;
     
     if (event->type == TouchEvent_Touchdown || event->type == TouchEvent_Liftoff) {
@@ -146,11 +163,13 @@ static void touch_handler(const TouchEvent *event, void *context) {
 }
 
 static void up_click_handler(ClickRecognizerRef recognizer, void *context) {
+    reset_idle_timer();
     s_target_top_content = (s_target_top_content == TOP_CONTENT_CALENDAR) ? TOP_CONTENT_WEATHER : TOP_CONTENT_CALENDAR;
     main_window_refresh();
 }
 
 static void down_click_handler(ClickRecognizerRef recognizer, void *context) {
+    reset_idle_timer();
     s_target_bottom_content = (s_target_bottom_content == BOTTOM_CONTENT_FORECAST) ? BOTTOM_CONTENT_PRECIP : BOTTOM_CONTENT_FORECAST;
     main_window_refresh();
 }
@@ -260,6 +279,10 @@ void main_window_refresh() {
 }
 
 void main_window_destroy() {
+    if (s_idle_timer) {
+        app_timer_cancel(s_idle_timer);
+        s_idle_timer = NULL;
+    }
 #if defined(PBL_PLATFORM_EMERY)
     if (touch_service_is_enabled()) {
         touch_service_unsubscribe();
