@@ -88,20 +88,20 @@ void time_layer_tick() {
     time_t last_sync = persist_get_last_sync_time();
     time_t app_fetch = persist_get_app_fetch_time();
     
-    char f_buffer[10] = "--:--";
-    char a_buffer[10] = "--:--";
+    char f_buffer[12] = "--:--:--";
+    char a_buffer[12] = "--:--:--";
     
     if (last_sync > 0) {
         struct tm *f_time = localtime(&last_sync);
-        strftime(f_buffer, sizeof(f_buffer), "%H:%M", f_time);
+        strftime(f_buffer, sizeof(f_buffer), "%H:%M:%S", f_time);
     }
     
     if (app_fetch > 0) {
         struct tm *a_time = localtime(&app_fetch);
-        strftime(a_buffer, sizeof(a_buffer), "%H:%M", a_time);
+        strftime(a_buffer, sizeof(a_buffer), "%H:%M:%S", a_time);
     }
 
-    snprintf(status_buffer, sizeof(status_buffer), "Face: %s | App: %s", f_buffer, a_buffer);
+    snprintf(status_buffer, sizeof(status_buffer), "App: %s | Phone: %s", f_buffer, a_buffer);
     text_layer_set_text(s_status_layer, status_buffer);
     
     // Reposition everything
