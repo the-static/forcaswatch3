@@ -97,7 +97,8 @@
       "TEMP_7DAY_HI_STR",
       "TEMP_7DAY_LO_STR",
       "PRESSURE",
-      "POLLEN_INDEX"
+      "POLLEN_INDEX",
+      "APP_FETCH_TIME"
     ]
   }
 }

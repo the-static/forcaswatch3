@@ -1,5 +1,6 @@
 #include "time_layer.h"
 #include "c/appendix/config.h"
+#include "c/appendix/persist.h"
 #include "c/appendix/memory_log.h"
 
 // MT = Margin Top
@@ -15,6 +16,7 @@
 static TextLayer *s_container_layer;
 static TextLayer *s_time_layer;
 static TextLayer *s_am_pm_layer;
+static TextLayer *s_status_layer;
 
 static bool s_zulu_time = false;
 
@@ -35,15 +37,16 @@ void time_layer_create(Layer* parent_layer, GRect frame) {
     text_layer_set_text(s_time_layer, "00:00");
     text_layer_set_text_alignment(s_time_layer, GTextAlignmentLeft);
 
-    // AM/PM formatting
-    text_layer_set_font(s_am_pm_layer, fonts_get_system_font(SYS_FONT_18));
-    text_layer_set_background_color(s_am_pm_layer, GColorClear);
-    text_layer_set_text_color(s_am_pm_layer, GColorWhite);
-    text_layer_set_text(s_am_pm_layer, "PM");
-    text_layer_set_text_alignment(s_am_pm_layer, GTextAlignmentLeft);
+    // Status layer
+    s_status_layer = text_layer_create(GRect(0, frame.size.h - 14, frame.size.w, 14));
+    text_layer_set_background_color(s_status_layer, GColorClear);
+    text_layer_set_text_color(s_status_layer, GColorLightGray);
+    text_layer_set_font(s_status_layer, fonts_get_system_font(FONT_KEY_GOTHIC_14));
+    text_layer_set_text_alignment(s_status_layer, GTextAlignmentCenter);
 
     layer_add_child(text_layer_get_layer(s_container_layer), text_layer_get_layer(s_time_layer));
     layer_add_child(text_layer_get_layer(s_time_layer), text_layer_get_layer(s_am_pm_layer));
+    layer_add_child(text_layer_get_layer(s_container_layer), text_layer_get_layer(s_status_layer));
     layer_add_child(parent_layer, text_layer_get_layer(s_container_layer));
     MEMORY_LOG_HEAP("after_time_layer_create");
 
@@ -77,6 +80,27 @@ void time_layer_tick() {
     } else if (g_config->show_am_pm) {
         text_layer_set_text(s_am_pm_layer, tick_time->tm_hour < 12 ? "AM" : "PM");
     }
+
+    // Update status text
+    static char status_buffer[64];
+    time_t forecast_start = persist_get_forecast_start();
+    time_t app_fetch = persist_get_app_fetch_time();
+    
+    char f_buffer[10] = "--:--";
+    char a_buffer[10] = "--:--";
+    
+    if (forecast_start > 0) {
+        struct tm *f_time = localtime(&forecast_start);
+        strftime(f_buffer, sizeof(f_buffer), "%H:%M", f_time);
+    }
+    
+    if (app_fetch > 0) {
+        struct tm *a_time = localtime(&app_fetch);
+        strftime(a_buffer, sizeof(a_buffer), "%H:%M", a_time);
+    }
+
+    snprintf(status_buffer, sizeof(status_buffer), "Face: %s | App: %s", f_buffer, a_buffer);
+    text_layer_set_text(s_status_layer, status_buffer);
     
     // Reposition everything
     GRect bounds = layer_get_bounds(text_layer_get_layer(s_container_layer));
@@ -88,7 +112,7 @@ void time_layer_tick() {
     bool show_suffix = s_zulu_time || g_config->show_am_pm;
     int content_w = time_size.w + (show_suffix ? am_pm_size.w : 0);
     int text_h = time_size.h - MT_TIME; // Remove top margin, approximately
-    int text_top = -MT_TIME + (bounds.size.h/2 - text_h/2);
+    int text_top = -MT_TIME + (bounds.size.h/2 - text_h/2) - 8; // Shift up by 8 pixels
     int text_left = 5;
 
     // Update layer positions and visibility
@@ -108,6 +132,7 @@ void time_layer_refresh() {
 void time_layer_destroy() {
     if (!s_container_layer) return;
     MEMORY_LOG_HEAP("time_layer_destroy:before");
+    text_layer_destroy(s_status_layer);
     text_layer_destroy(s_time_layer);
     s_time_layer = NULL;
     text_layer_destroy(s_container_layer);
