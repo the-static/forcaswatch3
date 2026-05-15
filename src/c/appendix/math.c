@@ -27,3 +27,11 @@ int f_to_c(int temp_f) {
     // Convert a fahrenheit temperature to celcius
     return roundFloat((temp_f - 32) * 5.0 / 9);
 }
+
+uint32_t gcolor_to_hex(GColor color) {
+#if defined(PBL_COLOR)
+    return ((color.r * 85) << 16) | ((color.g * 85) << 8) | (color.b * 85);
+#else
+    return gcolor_equal(color, GColorWhite) ? 0xFFFFFF : 0x000000;
+#endif
+}

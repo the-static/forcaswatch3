@@ -55,20 +55,102 @@ Pebble.addEventListener('appmessage', function(e) {
     }
 
     var hasForecastData = Boolean(payload.WATCH_HAS_FORECAST_DATA);
+    var watchForecastStart = payload.FORECAST_START; // Unix timestamp in seconds
 
     if (hasForecastData) {
-        console.log('Watch reported valid forecast data at startup.');
+        console.log('Watch reported valid forecast data at startup (start time: ' + watchForecastStart + ')');
         app.pendingStartupFetch = false;
         
         var lastFetchSuccessString = localStorage.getItem(KEY_LAST_FETCH_SUCCESS);
-        if (lastFetchSuccessString !== null) {
-            var lastFetchSuccess = JSON.parse(lastFetchSuccessString);
-            if (lastFetchSuccess.time !== null) {
-                if (Date.now() - new Date(lastFetchSuccess.time).getTime() > 1000 * 60 * 10) {
-                    console.log('Forecast data is > 10 minutes old at startup, forcing fetch.');
-                    app.pendingStartupFetch = true;
+        var lastFetchSuccess = lastFetchSuccessString ? JSON.parse(lastFetchSuccessString) : null;
+        
+        // If the watch has a valid timestamp, synchronize the phone's lastFetchSuccess
+        if (watchForecastStart > 0) {
+            var watchDate = new Date(watchForecastStart * 1000);
+            var phoneDate = lastFetchSuccess ? new Date(lastFetchSuccess.time) : new Date(0);
+            
+            // If the watch data is newer (or we have no phone data), trust the watch
+            if (watchDate > phoneDate) {
+                console.log('Synchronizing phone fetch time with watch data (' + watchDate.toISOString() + ')');
+                localStorage.setItem(KEY_LAST_FETCH_SUCCESS, JSON.stringify({
+                    time: watchDate.toISOString(),
+                    lat: lastFetchSuccess ? lastFetchSuccess.lat : null,
+                    lon: lastFetchSuccess ? lastFetchSuccess.lon : null
+                }));
+                lastFetchSuccess = JSON.parse(localStorage.getItem(KEY_LAST_FETCH_SUCCESS));
+            }
+        }
+
+        // Synchronize Clay settings from watch
+        var settings = JSON.parse(localStorage.getItem('clay-settings')) || {};
+        var updated = false;
+
+        var syncSetting = function(payloadKey, settingsKey, transform) {
+            if (Object.prototype.hasOwnProperty.call(payload, payloadKey)) {
+                var val = payload[payloadKey];
+                if (transform) val = transform(val);
+                if (settings[settingsKey] !== val) {
+                    settings[settingsKey] = val;
+                    updated = true;
                 }
             }
+        };
+
+        syncSetting('CLAY_CELSIUS', 'temperatureUnits', function(v) { return v ? 'c' : 'f'; });
+        syncSetting('CLAY_TIME_LEAD_ZERO', 'timeLeadingZero', Boolean);
+        syncSetting('CLAY_AXIS_12H', 'axisTimeFormat', function(v) { return v ? '12h' : '24h'; });
+        syncSetting('CLAY_START_MON', 'weekStartDay', function(v) { return v ? 'mon' : 'sun'; });
+        syncSetting('CLAY_PREV_WEEK', 'firstWeek', function(v) { return v ? 'prev' : 'curr'; });
+        syncSetting('CLAY_TIME_FONT', 'timeFont', function(v) { return ['roboto', 'leco', 'bitham'][v] || 'roboto'; });
+        syncSetting('CLAY_SHOW_QT', 'showQt', Boolean);
+        syncSetting('CLAY_VIBE', 'vibe', Boolean);
+        syncSetting('CLAY_SHOW_AM_PM', 'timeShowAmPm', Boolean);
+        syncSetting('CLAY_DAY_NIGHT_SHADING', 'dayNightShading', Boolean);
+        syncSetting('CLAY_TOP_CONTENT', 'topContent', function(v) { return ['calendar', 'weather'][v] || 'calendar'; });
+
+        // Colors (convert hex integers to strings if necessary)
+        var syncColor = function(payloadKey, settingsKey) {
+            syncSetting(payloadKey, settingsKey, function(v) {
+                var hex = v.toString(16).toUpperCase();
+                while (hex.length < 6) hex = '0' + hex;
+                return '#' + hex;
+            });
+        };
+        syncColor('CLAY_COLOR_TODAY', 'colorToday');
+        syncColor('CLAY_COLOR_SATURDAY', 'colorSaturday');
+        syncColor('CLAY_COLOR_SUNDAY', 'colorSunday');
+        syncColor('CLAY_COLOR_US_FEDERAL', 'colorUSFederal');
+        syncColor('CLAY_COLOR_TIME', 'colorTime');
+
+        // Bluetooth icons (reconstruct from two bits)
+        if (Object.prototype.hasOwnProperty.call(payload, 'CLAY_SHOW_BT') && Object.prototype.hasOwnProperty.call(payload, 'CLAY_SHOW_BT_DISCONNECT')) {
+            var showConn = Boolean(payload.CLAY_SHOW_BT);
+            var showDisc = Boolean(payload.CLAY_SHOW_BT_DISCONNECT);
+            var mode = 'none';
+            if (showConn && showDisc) mode = 'both';
+            else if (showConn) mode = 'connected';
+            else if (showDisc) mode = 'disconnected';
+            
+            if (settings.btIcons !== mode) {
+                settings.btIcons = mode;
+                updated = true;
+            }
+        }
+
+        if (updated) {
+            console.log('Synchronized Clay settings from watch');
+            localStorage.setItem('clay-settings', JSON.stringify(settings));
+            app.settings = settings;
+        }
+
+        if (lastFetchSuccess && lastFetchSuccess.time !== null) {
+            if (Date.now() - new Date(lastFetchSuccess.time).getTime() > 1000 * 60 * 10) {
+                console.log('Forecast data is > 10 minutes old at startup, forcing fetch.');
+                app.pendingStartupFetch = true;
+            }
+        }
+        else {
+            app.pendingStartupFetch = true;
         }
         
         if (!app.pendingStartupFetch) {
@@ -76,7 +158,7 @@ Pebble.addEventListener('appmessage', function(e) {
         }
     }
 
-    console.log('Watch reported no forecast data at startup.');
+    console.log('Watch reported no forecast data or stale data at startup.');
     app.pendingStartupFetch = true;
 
     if (app.provider) {

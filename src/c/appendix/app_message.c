@@ -192,6 +192,32 @@ void app_message_send_startup_state(bool has_forecast_data) {
     }
 
     dict_write_uint8(outbox, MESSAGE_KEY_WATCH_HAS_FORECAST_DATA, has_forecast_data ? 1 : 0);
+    if (has_forecast_data) {
+        dict_write_uint32(outbox, MESSAGE_KEY_FORECAST_START, (uint32_t)persist_get_forecast_start());
+    }
+
+    // Send current config to sync phone-side settings
+    if (g_config) {
+        dict_write_int16(outbox, MESSAGE_KEY_CLAY_CELSIUS, g_config->celsius ? 1 : 0);
+        dict_write_int16(outbox, MESSAGE_KEY_CLAY_TIME_LEAD_ZERO, g_config->time_lead_zero ? 1 : 0);
+        dict_write_int16(outbox, MESSAGE_KEY_CLAY_AXIS_12H, g_config->axis_12h ? 1 : 0);
+        dict_write_int16(outbox, MESSAGE_KEY_CLAY_START_MON, g_config->start_mon ? 1 : 0);
+        dict_write_int16(outbox, MESSAGE_KEY_CLAY_PREV_WEEK, g_config->prev_week ? 1 : 0);
+        dict_write_int16(outbox, MESSAGE_KEY_CLAY_TIME_FONT, g_config->time_font);
+        dict_write_int32(outbox, MESSAGE_KEY_CLAY_COLOR_TODAY, (int32_t)gcolor_to_hex(g_config->color_today));
+        dict_write_int32(outbox, MESSAGE_KEY_CLAY_COLOR_SATURDAY, (int32_t)gcolor_to_hex(g_config->color_saturday));
+        dict_write_int32(outbox, MESSAGE_KEY_CLAY_COLOR_SUNDAY, (int32_t)gcolor_to_hex(g_config->color_sunday));
+        dict_write_int32(outbox, MESSAGE_KEY_CLAY_COLOR_US_FEDERAL, (int32_t)gcolor_to_hex(g_config->color_us_federal));
+        dict_write_int32(outbox, MESSAGE_KEY_CLAY_COLOR_TIME, (int32_t)gcolor_to_hex(g_config->color_time));
+        dict_write_int16(outbox, MESSAGE_KEY_CLAY_VIBE, g_config->vibe ? 1 : 0);
+        dict_write_int16(outbox, MESSAGE_KEY_CLAY_SHOW_QT, g_config->show_qt ? 1 : 0);
+        dict_write_int16(outbox, MESSAGE_KEY_CLAY_SHOW_BT, g_config->show_bt ? 1 : 0);
+        dict_write_int16(outbox, MESSAGE_KEY_CLAY_SHOW_BT_DISCONNECT, g_config->show_bt_disconnect ? 1 : 0);
+        dict_write_int16(outbox, MESSAGE_KEY_CLAY_SHOW_AM_PM, g_config->show_am_pm ? 1 : 0);
+        dict_write_int16(outbox, MESSAGE_KEY_CLAY_DAY_NIGHT_SHADING, g_config->day_night_shading ? 1 : 0);
+        dict_write_int16(outbox, MESSAGE_KEY_CLAY_TOP_CONTENT, g_config->top_content);
+    }
+
     result = app_message_outbox_send();
 
     if (result != APP_MSG_OK) {
@@ -206,7 +232,7 @@ void app_message_init() {
 
     // Open AppMessage
     const int inbox_size = 1024;
-    const int outbox_size = dict_calc_buffer_size(1, sizeof(uint8_t));
+    const int outbox_size = 1024;
     APP_LOG(APP_LOG_LEVEL_INFO, "AppMessage buffer sizes: inbox=%d outbox=%d", inbox_size, outbox_size);
     app_message_open(inbox_size, outbox_size);
     MEMORY_LOG_HEAP("after_app_message_open");
