@@ -764,6 +764,6 @@ function needRefresh() {
         // Just covering all my bases
         return true;
     }
-    // If the most recent fetch is more than 30 minutes old
-    return (Date.now() - roundDownMinutes(new Date(lastFetchSuccess.time), 30) > 1000 * 60 * 30);
+    // If the most recent fetch is more than 10 minutes old
+    return (Date.now() - new Date(lastFetchSuccess.time).getTime() > 1000 * 60 * 10);
 }
