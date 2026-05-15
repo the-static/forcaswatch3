@@ -54,9 +54,12 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
     Tuple *clay_day_night_shading_tuple = dict_find(iterator, MESSAGE_KEY_CLAY_DAY_NIGHT_SHADING);
     Tuple *clay_top_content_tuple = dict_find(iterator, MESSAGE_KEY_CLAY_TOP_CONTENT);
 
+    bool handled = false;
+
     if(temp_trend_tuple && precip_trend_tuple && forecast_start_tuple && num_entries_tuple && city_tuple && sun_events_tuple) {
+        handled = true;
         // Weather data received
-        APP_LOG(APP_LOG_LEVEL_INFO, "All tuples received!");
+        APP_LOG(APP_LOG_LEVEL_INFO, "Weather data received!");
         persist_set_forecast_start((time_t)forecast_start_tuple->value->int32);
         const int num_entries = ((int)num_entries_tuple->value->int32);
         persist_set_num_entries(num_entries);
@@ -132,10 +135,13 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
         calendar_status_layer_refresh();
         weather_summary_layer_refresh();
     }
-    else if (clay_celsius_tuple && clay_time_lead_zero_tuple && clay_axis_12h_tuple && clay_start_mon_tuple && clay_prev_week_tuple
+    
+    if (clay_celsius_tuple && clay_time_lead_zero_tuple && clay_axis_12h_tuple && clay_start_mon_tuple && clay_prev_week_tuple
         && clay_color_today_tuple && clay_time_font_tuple && clay_vibe_tuple && clay_show_qt_tuple && clay_show_bt_tuple
         && clay_show_bt_disconnect_tuple && clay_show_am_pm_tuple && clay_color_saturday_tuple && clay_color_sunday_tuple
         && clay_color_us_federal_tuple && clay_color_time_tuple && clay_day_night_shading_tuple && clay_top_content_tuple) {
+        
+        handled = true;
         // Clay config data received
         bool clay_celsius = (bool) (clay_celsius_tuple->value->int16);
         bool time_lead_zero = (bool) (clay_time_lead_zero_tuple->value->int16);
@@ -177,11 +183,14 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
         persist_set_config(config);
         main_window_refresh();
     }
-    else if (clay_active_tuple) {
+    
+    if (clay_active_tuple) {
+        handled = true;
         main_window_set_clay_active(clay_active_tuple->value->uint8 == 1);
     }
-    else {
-        APP_LOG(APP_LOG_LEVEL_WARNING, "Bad payload received in app_message.c");
+    
+    if (!handled) {
+        APP_LOG(APP_LOG_LEVEL_WARNING, "Unhandled AppMessage received");
     }
 }
 

@@ -202,7 +202,6 @@ Pebble.addEventListener('webviewclosed', function(e) {
     app.telemetry = createTelemetryClient(getRuntimeTelemetryConfig());
     refreshProvider();
     sendClaySettings();
-    Pebble.sendAppMessage({ 'CLAY_ACTIVE': 0 });
 
     // Fetching goes last, after other settings have been handled
     if (app.settings.fetch === true) {
@@ -494,6 +493,7 @@ function sendClaySettings() {
         "CLAY_COLOR_TIME": app.settings.hasOwnProperty('colorTime') ? app.settings.colorTime : 16777215,
         "CLAY_DAY_NIGHT_SHADING": app.settings.hasOwnProperty('dayNightShading') ? app.settings.dayNightShading : true,
         "CLAY_TOP_CONTENT": ['calendar', 'weather'].indexOf(app.settings.topContent),
+        "CLAY_ACTIVE": 0
     }
     Pebble.sendAppMessage(payload, function() {
         console.log('Message sent successfully: ' + JSON.stringify(payload));
