@@ -233,6 +233,24 @@ void app_message_send_startup_state(bool has_forecast_data) {
     }
 }
 
+void app_message_request_weather() {
+    DictionaryIterator *outbox;
+    AppMessageResult result = app_message_outbox_begin(&outbox);
+
+    if (result != APP_MSG_OK) {
+        APP_LOG(APP_LOG_LEVEL_ERROR, "Unable to begin weather request outbox: %d", result);
+        return;
+    }
+
+    dict_write_uint8(outbox, MESSAGE_KEY_REQUEST_WEATHER, 1);
+
+    result = app_message_outbox_send();
+
+    if (result != APP_MSG_OK) {
+        APP_LOG(APP_LOG_LEVEL_ERROR, "Unable to send weather request: %d", result);
+    }
+}
+
 void app_message_init() {
     // Register callbacks
     app_message_register_inbox_received(inbox_received_callback);

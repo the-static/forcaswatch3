@@ -137,6 +137,12 @@ function syncFetchTimeFromWatch(payload) {
 Pebble.addEventListener('appmessage', function(e) {
     var payload = e && e.payload;
 
+    if (payload && payload.REQUEST_WEATHER) {
+        console.log('Manual weather fetch requested from watch.');
+        fetch(app.provider, true);
+        return;
+    }
+
     if (!payload || !Object.prototype.hasOwnProperty.call(payload, 'WATCH_HAS_FORECAST_DATA')) {
         return;
     }

@@ -99,7 +99,8 @@
       "PRESSURE",
       "POLLEN_INDEX",
       "APP_FETCH_TIME",
-      "CLAY_ACTIVE"
+      "CLAY_ACTIVE",
+      "REQUEST_WEATHER"
     ]
   }
 }

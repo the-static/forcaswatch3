@@ -5,3 +5,5 @@
 void app_message_init();
 
 void app_message_send_startup_state(bool has_forecast_data);
+
+void app_message_request_weather();
