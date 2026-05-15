@@ -26,18 +26,22 @@ static TextLayer *s_temp_layer;
 #endif
 
 static const GPathInfo WIND_ARROW_POINTS = {
-  .num_points = 10,
+  .num_points = 14,
   .points = (GPoint []) {
     {0, -WIND_ARROW_SCALE_Y},                                 // Tip
-    {WIND_ARROW_SCALE_X, -WIND_ARROW_SCALE_Y + 5},            // Right head corner
-    {WIND_ARROW_SCALE_X/2, -WIND_ARROW_SCALE_Y + 5},          // Right neck
-    {WIND_ARROW_SCALE_X/2, WIND_ARROW_SCALE_Y - 5},           // Right tail top
-    {WIND_ARROW_SCALE_X, WIND_ARROW_SCALE_Y},                 // Right tail bottom
-    {0, WIND_ARROW_SCALE_Y - 3},                              // Tail notch
-    {-WIND_ARROW_SCALE_X, WIND_ARROW_SCALE_Y},                // Left tail bottom
-    {-WIND_ARROW_SCALE_X/2, WIND_ARROW_SCALE_Y - 5},          // Left tail top
-    {-WIND_ARROW_SCALE_X/2, -WIND_ARROW_SCALE_Y + 5},         // Left neck
-    {-WIND_ARROW_SCALE_X, -WIND_ARROW_SCALE_Y + 5}            // Left head corner
+    {WIND_ARROW_SCALE_X/2, -WIND_ARROW_SCALE_Y + 5},          // Head Right
+    {1, -WIND_ARROW_SCALE_Y + 5},                             // Neck Right
+    {1, WIND_ARROW_SCALE_Y},                                  // Shaft Bottom Right
+    {1, WIND_ARROW_SCALE_Y - 2},                              // Barb 1 Start
+    {WIND_ARROW_SCALE_X - 2, WIND_ARROW_SCALE_Y - 6},         // Barb 1 End
+    {WIND_ARROW_SCALE_X - 4, WIND_ARROW_SCALE_Y - 6},         // Barb 1 return
+    {1, WIND_ARROW_SCALE_Y - 4},                              // Shaft mid
+    {WIND_ARROW_SCALE_X - 2, WIND_ARROW_SCALE_Y - 9},         // Barb 2 End
+    {WIND_ARROW_SCALE_X - 4, WIND_ARROW_SCALE_Y - 9},         // Barb 2 return
+    {1, WIND_ARROW_SCALE_Y - 7},                              // Shaft higher
+    {-1, WIND_ARROW_SCALE_Y},                                 // Shaft Bottom Left
+    {-1, -WIND_ARROW_SCALE_Y + 5},                            // Neck Left
+    {-WIND_ARROW_SCALE_X/2, -WIND_ARROW_SCALE_Y + 5},         // Head Left
   }
 };
 static GPath *s_wind_arrow_path;
