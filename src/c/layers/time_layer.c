@@ -38,9 +38,9 @@ void time_layer_create(Layer* parent_layer, GRect frame) {
     text_layer_set_text_alignment(s_time_layer, GTextAlignmentLeft);
 
     // Status layer
-    s_status_layer = text_layer_create(GRect(0, frame.size.h - 24, frame.size.w, 16));
+    s_status_layer = text_layer_create(GRect(0, frame.size.h - 26, frame.size.w, 20));
     text_layer_set_background_color(s_status_layer, GColorClear);
-    text_layer_set_text_color(s_status_layer, GColorLightGray);
+    text_layer_set_text_color(s_status_layer, GColorWhite);
     text_layer_set_font(s_status_layer, fonts_get_system_font(SYS_FONT_14));
     text_layer_set_text_alignment(s_status_layer, GTextAlignmentCenter);
 
