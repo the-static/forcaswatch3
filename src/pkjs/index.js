@@ -43,6 +43,26 @@ var KEY_LAST_FETCH_SUCCESS = storageKeys.LAST_FETCH_SUCCESS_KEY;
 var KEY_LAST_FETCH_ATTEMPT = storageKeys.LAST_FETCH_ATTEMPT_KEY;
 var KEY_GEOCODE_CACHE = storageKeys.GEOCODE_CACHE_KEY;
 var KEY_GEOCODE_BACKOFF = storageKeys.GEOCODE_BACKOFF_KEY;
+var LOCATION_CHANGE_THRESHOLD_KM = 5;
+
+/**
+ * Calculate the distance between two coordinates in kilometers.
+ * @param {number} lat1 
+ * @param {number} lon1 
+ * @param {number} lat2 
+ * @param {number} lon2 
+ * @returns {number} Distance in km
+ */
+function getDistance(lat1, lon1, lat2, lon2) {
+    var R = 6371; // km
+    var dLat = (lat2 - lat1) * Math.PI / 180;
+    var dLon = (lon2 - lon1) * Math.PI / 180;
+    var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+}
 
 app.fetchInProgress = false;
 app.pendingStartupFetch = false;
@@ -240,7 +260,7 @@ Pebble.addEventListener('ready',
         refreshProvider();
         if (app.pendingStartupFetch) {
             app.pendingStartupFetch = false;
-            fetch(app.provider, true);
+            fetch(app.provider, false);
         }
         startTick();
     }
@@ -677,8 +697,10 @@ function fetch(provider, force) {
     try {
         provider.fetch(
             function() {
-                // Sucess, update recent fetch time
+                // Success, update recent fetch time
                 app.fetchInProgress = false;
+                fetchStatus.lat = provider.lat;
+                fetchStatus.lon = provider.lon;
                 localStorage.setItem(KEY_LAST_FETCH_SUCCESS, JSON.stringify(fetchStatus));
                 resetFetchAttemptCounter();
                 console.log('Successfully fetched weather!');

@@ -6,6 +6,22 @@ var GPS_CACHE_KEY = 'gpsCache';
 var GPS_CACHE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 var GEOCODE_CACHE_KEY = storageKeys.GEOCODE_CACHE_KEY;
 var RATE_LIMIT_BACKOFF_KEY = storageKeys.GEOCODE_BACKOFF_KEY;
+var LAST_FETCH_SUCCESS_KEY = storageKeys.LAST_FETCH_SUCCESS_KEY;
+var LOCATION_CHANGE_THRESHOLD_KM = 5;
+
+/**
+ * Calculate the distance between two coordinates in kilometers.
+ */
+function getDistance(lat1, lon1, lat2, lon2) {
+    var R = 6371; // km
+    var dLat = (lat2 - lat1) * Math.PI / 180;
+    var dLon = (lon2 - lon1) * Math.PI / 180;
+    var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+}
 
 /**
  * Perform an HTTP request and return response text.
@@ -560,6 +576,30 @@ WeatherProvider.prototype.fetch = function(onSuccess, onFailure, force) {
     this.locationMode = null;
 
     this.withCoordinates((function(lat, lon) {
+        if (!force) {
+            var lastFetchSuccessString = localStorage.getItem(LAST_FETCH_SUCCESS_KEY);
+            if (lastFetchSuccessString) {
+                var lastFetchSuccess = JSON.parse(lastFetchSuccessString);
+                var lastFetchTime = new Date(lastFetchSuccess.time);
+                var now = new Date();
+                var timeDiff = now - lastFetchTime;
+                
+                // If within 10 minutes AND hasn't moved much, skip.
+                if (timeDiff < 10 * 60 * 1000) {
+                    if (lastFetchSuccess.lat && lastFetchSuccess.lon) {
+                        var dist = getDistance(lat, lon, lastFetchSuccess.lat, lastFetchSuccess.lon);
+                        if (dist < LOCATION_CHANGE_THRESHOLD_KM) {
+                             console.log('Skipping fetch: Location change (' + dist.toFixed(2) + ' km) is below threshold and cache is fresh.');
+                             onSuccess();
+                             return;
+                        } else {
+                             console.log('Significant location change detected (' + dist.toFixed(2) + ' km). Proceeding with fetch.');
+                        }
+                    }
+                }
+            }
+        }
+
         this.withCityName(lat, lon, (function(cityName, countryCode) {
             this.countryCode = countryCode;
             this.withSunEvents(lat, lon, (function(sunEvents) {
