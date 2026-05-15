@@ -38,10 +38,10 @@ void time_layer_create(Layer* parent_layer, GRect frame) {
     text_layer_set_text_alignment(s_time_layer, GTextAlignmentLeft);
 
     // Status layer
-    s_status_layer = text_layer_create(GRect(0, frame.size.h - 14, frame.size.w, 14));
+    s_status_layer = text_layer_create(GRect(0, frame.size.h - 18, frame.size.w, 18));
     text_layer_set_background_color(s_status_layer, GColorClear);
     text_layer_set_text_color(s_status_layer, GColorLightGray);
-    text_layer_set_font(s_status_layer, fonts_get_system_font(FONT_KEY_GOTHIC_14));
+    text_layer_set_font(s_status_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18));
     text_layer_set_text_alignment(s_status_layer, GTextAlignmentCenter);
 
     layer_add_child(text_layer_get_layer(s_container_layer), text_layer_get_layer(s_time_layer));
@@ -80,17 +80,19 @@ void time_layer_tick() {
     } else if (g_config->show_am_pm) {
         text_layer_set_text(s_am_pm_layer, tick_time->tm_hour < 12 ? "AM" : "PM");
     }
+    text_layer_set_text_color(s_am_pm_layer, GColorWhite);
+    text_layer_set_background_color(s_am_pm_layer, GColorClear);
 
     // Update status text
     static char status_buffer[64];
-    time_t forecast_start = persist_get_forecast_start();
+    time_t last_sync = persist_get_last_sync_time();
     time_t app_fetch = persist_get_app_fetch_time();
     
     char f_buffer[10] = "--:--";
     char a_buffer[10] = "--:--";
     
-    if (forecast_start > 0) {
-        struct tm *f_time = localtime(&forecast_start);
+    if (last_sync > 0) {
+        struct tm *f_time = localtime(&last_sync);
         strftime(f_buffer, sizeof(f_buffer), "%H:%M", f_time);
     }
     

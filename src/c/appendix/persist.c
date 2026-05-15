@@ -5,7 +5,7 @@ enum key {
     TEMP_LO, TEMP_HI, TEMP_TREND, PRECIP_TREND, FORECAST_START, CITY, SUN_EVENT_START_TYPE, SUN_EVENT_TIMES, NUM_ENTRIES,
     CURRENT_TEMP, BATTERY_LEVEL, CONFIG,
     WIND_SPEED, WIND_DEG, HUMIDITY, WIND_GUST, PRECIP_7DAY, TEMP_7DAY_HI, TEMP_7DAY_LO, PRESSURE, POLLEN_INDEX,
-    APP_FETCH_TIME
+    APP_FETCH_TIME, LAST_SYNC_TIME
 }; // Deprecated: BATTERY_LEVEL
 
 void persist_init() {
@@ -241,6 +241,14 @@ time_t persist_get_app_fetch_time() {
 
 void persist_set_app_fetch_time(time_t val) {
     persist_write_int(APP_FETCH_TIME, (int)val);
+}
+
+time_t persist_get_last_sync_time() {
+    return persist_exists(LAST_SYNC_TIME) ? (time_t)persist_read_int(LAST_SYNC_TIME) : 0;
+}
+
+void persist_set_last_sync_time(time_t val) {
+    persist_write_int(LAST_SYNC_TIME, (int)val);
 }
 
 void persist_set_config(Config config) {

@@ -68,4 +68,7 @@ void persist_set_pollen_index(int val);
 time_t persist_get_app_fetch_time();
 void persist_set_app_fetch_time(time_t val);
 
+time_t persist_get_last_sync_time();
+void persist_set_last_sync_time(time_t val);
+
 void persist_set_config(Config config);

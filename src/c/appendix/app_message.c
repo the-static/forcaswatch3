@@ -85,7 +85,8 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
         if (wind_gust_tuple) persist_set_wind_gust((int)wind_gust_tuple->value->int32);
         if (pressure_tuple) persist_set_pressure((int)pressure_tuple->value->int32);
         if (pollen_tuple) persist_set_pollen_index((int)pollen_tuple->value->int32);
-        if (app_fetch_time_tuple) persist_set_app_fetch_time((time_t)app_fetch_time_tuple->value->int32);
+        persist_set_app_fetch_time((time_t)app_fetch_time_tuple->value->int32);
+        persist_set_last_sync_time(time(NULL));
         
         if (precip_str_tuple) {
             uint8_t precip_values[7];
