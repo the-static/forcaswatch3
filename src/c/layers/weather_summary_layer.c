@@ -9,7 +9,7 @@ static TextLayer *s_temp_layer;
 
 #if defined(PBL_PLATFORM_EMERY)
 #define WIND_ARROW_SCALE_X 10
-#define WIND_ARROW_SCALE_Y 15
+#define WIND_ARROW_SCALE_Y 16
 #define WIND_ARROW_MID_Y 7
 #define MOON_RADIUS 9
 #define MOON_X_OFFSET 20
@@ -26,23 +26,8 @@ static TextLayer *s_temp_layer;
 #endif
 
 static const GPathInfo WIND_ARROW_POINTS = {
-  .num_points = 14,
-  .points = (GPoint []) {
-    {0, -WIND_ARROW_SCALE_Y},                                 // Tip
-    {WIND_ARROW_SCALE_X/2, -WIND_ARROW_SCALE_Y + 5},          // Head Right
-    {1, -WIND_ARROW_SCALE_Y + 5},                             // Neck Right
-    {1, WIND_ARROW_SCALE_Y},                                  // Shaft Bottom Right
-    {1, WIND_ARROW_SCALE_Y - 2},                              // Barb 1 Start
-    {WIND_ARROW_SCALE_X - 2, WIND_ARROW_SCALE_Y - 6},         // Barb 1 End
-    {WIND_ARROW_SCALE_X - 4, WIND_ARROW_SCALE_Y - 6},         // Barb 1 return
-    {1, WIND_ARROW_SCALE_Y - 4},                              // Shaft mid
-    {WIND_ARROW_SCALE_X - 2, WIND_ARROW_SCALE_Y - 9},         // Barb 2 End
-    {WIND_ARROW_SCALE_X - 4, WIND_ARROW_SCALE_Y - 9},         // Barb 2 return
-    {1, WIND_ARROW_SCALE_Y - 7},                              // Shaft higher
-    {-1, WIND_ARROW_SCALE_Y},                                 // Shaft Bottom Left
-    {-1, -WIND_ARROW_SCALE_Y + 5},                            // Neck Left
-    {-WIND_ARROW_SCALE_X/2, -WIND_ARROW_SCALE_Y + 5},         // Head Left
-  }
+  .num_points = 4,
+  .points = (GPoint []) {{0, -WIND_ARROW_SCALE_Y}, {WIND_ARROW_SCALE_X, WIND_ARROW_SCALE_Y}, {0, WIND_ARROW_MID_Y}, {-WIND_ARROW_SCALE_X, WIND_ARROW_SCALE_Y}}
 };
 static GPath *s_wind_arrow_path;
 
