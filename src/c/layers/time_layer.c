@@ -38,10 +38,10 @@ void time_layer_create(Layer* parent_layer, GRect frame) {
     text_layer_set_text_alignment(s_time_layer, GTextAlignmentLeft);
 
     // Status layer
-    s_status_layer = text_layer_create(GRect(0, frame.size.h - 18, frame.size.w, 18));
+    s_status_layer = text_layer_create(GRect(0, frame.size.h - 24, frame.size.w, 16));
     text_layer_set_background_color(s_status_layer, GColorClear);
     text_layer_set_text_color(s_status_layer, GColorLightGray);
-    text_layer_set_font(s_status_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18));
+    text_layer_set_font(s_status_layer, fonts_get_system_font(SYS_FONT_14));
     text_layer_set_text_alignment(s_status_layer, GTextAlignmentCenter);
 
     layer_add_child(text_layer_get_layer(s_container_layer), text_layer_get_layer(s_time_layer));
