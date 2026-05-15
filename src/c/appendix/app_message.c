@@ -192,8 +192,9 @@ void app_message_send_startup_state(bool has_forecast_data) {
     }
 
     dict_write_uint8(outbox, MESSAGE_KEY_WATCH_HAS_FORECAST_DATA, has_forecast_data ? 1 : 0);
-    if (has_forecast_data) {
-        dict_write_uint32(outbox, MESSAGE_KEY_FORECAST_START, (uint32_t)persist_get_forecast_start());
+    time_t forecast_start = persist_get_forecast_start();
+    if (forecast_start > 0) {
+        dict_write_uint32(outbox, MESSAGE_KEY_FORECAST_START, (uint32_t)forecast_start);
     }
 
     // Send current config to sync phone-side settings

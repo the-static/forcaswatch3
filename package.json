@@ -12,7 +12,7 @@
   },
   "pebble": {
     "displayName": "FCW2 (Dev)",
-    "uuid": "5245a6ea-b3c4-45a1-b24c-30a88f330965",
+    "uuid": "7ed9b053-1521-4e49-be8b-6e12c68978ae",
     "sdkVersion": "3",
     "enableMultiJS": true,
     "targetPlatforms": [
