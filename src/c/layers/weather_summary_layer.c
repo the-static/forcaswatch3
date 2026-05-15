@@ -8,13 +8,13 @@ static TextLayer *s_detail_layer;
 static TextLayer *s_temp_layer;
 
 #if defined(PBL_PLATFORM_EMERY)
-#define WIND_ARROW_SCALE_X 11
-#define WIND_ARROW_SCALE_Y 16
+#define WIND_ARROW_SCALE_X 10
+#define WIND_ARROW_SCALE_Y 15
 #define WIND_ARROW_MID_Y 7
 #define MOON_RADIUS 9
 #define MOON_X_OFFSET 20
 #define MOON_Y_OFFSET 42
-#define ARROW_Y_OFFSET 16
+#define ARROW_Y_OFFSET 18
 #else
 #define WIND_ARROW_SCALE_X 8
 #define WIND_ARROW_SCALE_Y 12
@@ -22,7 +22,7 @@ static TextLayer *s_temp_layer;
 #define MOON_RADIUS 6
 #define MOON_X_OFFSET 15
 #define MOON_Y_OFFSET 30
-#define ARROW_Y_OFFSET 12
+#define ARROW_Y_OFFSET 14
 #endif
 
 static const GPathInfo WIND_ARROW_POINTS = {
@@ -30,13 +30,13 @@ static const GPathInfo WIND_ARROW_POINTS = {
   .points = (GPoint []) {
     {0, -WIND_ARROW_SCALE_Y},                                 // Tip
     {WIND_ARROW_SCALE_X/2, -WIND_ARROW_SCALE_Y + 5},          // Right head corner
-    {WIND_ARROW_SCALE_X/6, -WIND_ARROW_SCALE_Y + 5},          // Right neck
-    {WIND_ARROW_SCALE_X/6, WIND_ARROW_SCALE_Y - 5},           // Right tail top
+    {WIND_ARROW_SCALE_X/4, -WIND_ARROW_SCALE_Y + 5},          // Right neck
+    {WIND_ARROW_SCALE_X/4, WIND_ARROW_SCALE_Y - 5},           // Right tail top
     {WIND_ARROW_SCALE_X/2, WIND_ARROW_SCALE_Y},               // Right tail bottom
     {0, WIND_ARROW_SCALE_Y - 3},                              // Tail notch
     {-WIND_ARROW_SCALE_X/2, WIND_ARROW_SCALE_Y},              // Left tail bottom
-    {-WIND_ARROW_SCALE_X/6, WIND_ARROW_SCALE_Y - 5},          // Left tail top
-    {-WIND_ARROW_SCALE_X/6, -WIND_ARROW_SCALE_Y + 5},         // Left neck
+    {-WIND_ARROW_SCALE_X/4, WIND_ARROW_SCALE_Y - 5},          // Left tail top
+    {-WIND_ARROW_SCALE_X/4, -WIND_ARROW_SCALE_Y + 5},         // Left neck
     {-WIND_ARROW_SCALE_X/2, -WIND_ARROW_SCALE_Y + 5}          // Left head corner
   }
 };
