@@ -29,15 +29,15 @@ static const GPathInfo WIND_ARROW_POINTS = {
   .num_points = 10,
   .points = (GPoint []) {
     {0, -WIND_ARROW_SCALE_Y},                                 // Tip
-    {WIND_ARROW_SCALE_X/2, -WIND_ARROW_SCALE_Y + 5},          // Right head corner
-    {WIND_ARROW_SCALE_X/4, -WIND_ARROW_SCALE_Y + 5},          // Right neck
-    {WIND_ARROW_SCALE_X/4, WIND_ARROW_SCALE_Y - 5},           // Right tail top
-    {WIND_ARROW_SCALE_X/2, WIND_ARROW_SCALE_Y},               // Right tail bottom
+    {WIND_ARROW_SCALE_X, -WIND_ARROW_SCALE_Y + 5},            // Right head corner
+    {WIND_ARROW_SCALE_X/2, -WIND_ARROW_SCALE_Y + 5},          // Right neck
+    {WIND_ARROW_SCALE_X/2, WIND_ARROW_SCALE_Y - 5},           // Right tail top
+    {WIND_ARROW_SCALE_X, WIND_ARROW_SCALE_Y},                 // Right tail bottom
     {0, WIND_ARROW_SCALE_Y - 3},                              // Tail notch
-    {-WIND_ARROW_SCALE_X/2, WIND_ARROW_SCALE_Y},              // Left tail bottom
-    {-WIND_ARROW_SCALE_X/4, WIND_ARROW_SCALE_Y - 5},          // Left tail top
-    {-WIND_ARROW_SCALE_X/4, -WIND_ARROW_SCALE_Y + 5},         // Left neck
-    {-WIND_ARROW_SCALE_X/2, -WIND_ARROW_SCALE_Y + 5}          // Left head corner
+    {-WIND_ARROW_SCALE_X, WIND_ARROW_SCALE_Y},                // Left tail bottom
+    {-WIND_ARROW_SCALE_X/2, WIND_ARROW_SCALE_Y - 5},          // Left tail top
+    {-WIND_ARROW_SCALE_X/2, -WIND_ARROW_SCALE_Y + 5},         // Left neck
+    {-WIND_ARROW_SCALE_X, -WIND_ARROW_SCALE_Y + 5}            // Left head corner
   }
 };
 static GPath *s_wind_arrow_path;
