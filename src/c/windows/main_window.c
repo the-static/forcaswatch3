@@ -114,6 +114,7 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
 }
 
 static AppTimer *s_idle_timer = NULL;
+static bool s_clay_active = false;
 
 static void idle_timer_callback(void *data) {
     s_idle_timer = NULL;
@@ -123,8 +124,16 @@ static void idle_timer_callback(void *data) {
 static void reset_idle_timer() {
     if (s_idle_timer) {
         app_timer_cancel(s_idle_timer);
+        s_idle_timer = NULL;
     }
-    s_idle_timer = app_timer_register(30000, idle_timer_callback, NULL);
+    if (!s_clay_active) {
+        s_idle_timer = app_timer_register(30000, idle_timer_callback, NULL);
+    }
+}
+
+void main_window_set_clay_active(bool active) {
+    s_clay_active = active;
+    reset_idle_timer();
 }
 
 static bool s_tap_locked = false;

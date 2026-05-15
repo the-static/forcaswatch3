@@ -182,10 +182,12 @@ Pebble.addEventListener('showConfiguration', function(e) {
     clay.meta.userData.lastFetchAttempt = localStorage.getItem(KEY_LAST_FETCH_ATTEMPT);
     Pebble.openURL(clay.generateUrl());
     console.log('Showing clay: ' + JSON.stringify(getClaySettings()));
+    Pebble.sendAppMessage({ 'CLAY_ACTIVE': 1 });
 });
 
 Pebble.addEventListener('webviewclosed', function(e) {
     if (e && !e.response) {
+        Pebble.sendAppMessage({ 'CLAY_ACTIVE': 0 });
         return;
     }
 
@@ -194,6 +196,7 @@ Pebble.addEventListener('webviewclosed', function(e) {
     app.telemetry = createTelemetryClient(getRuntimeTelemetryConfig());
     refreshProvider();
     sendClaySettings();
+    Pebble.sendAppMessage({ 'CLAY_ACTIVE': 0 });
 
     // Fetching goes last, after other settings have been handled
     if (app.settings.fetch === true) {

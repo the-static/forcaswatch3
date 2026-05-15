@@ -32,6 +32,7 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
     Tuple *pressure_tuple = dict_find(iterator, MESSAGE_KEY_PRESSURE);
     Tuple *pollen_tuple = dict_find(iterator, MESSAGE_KEY_POLLEN_INDEX);
     Tuple *app_fetch_time_tuple = dict_find(iterator, MESSAGE_KEY_APP_FETCH_TIME);
+    Tuple *clay_active_tuple = dict_find(iterator, MESSAGE_KEY_CLAY_ACTIVE);
 
     // Clay config options
     Tuple *clay_celsius_tuple = dict_find(iterator, MESSAGE_KEY_CLAY_CELSIUS);
@@ -175,6 +176,9 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
         };
         persist_set_config(config);
         main_window_refresh();
+    }
+    else if (clay_active_tuple) {
+        main_window_set_clay_active(clay_active_tuple->value->uint8 == 1);
     }
     else {
         APP_LOG(APP_LOG_LEVEL_WARNING, "Bad payload received in app_message.c");
