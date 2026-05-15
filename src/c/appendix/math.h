@@ -7,3 +7,5 @@ void min_max(int16_t *array, int n, int *min, int *max);
 int f_to_c(int temp_f);
 
 uint32_t gcolor_to_hex(GColor color);
+
+const char* get_wind_direction_string(int degrees);

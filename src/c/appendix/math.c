@@ -35,3 +35,9 @@ uint32_t gcolor_to_hex(GColor color) {
     return gcolor_equal(color, GColorWhite) ? 0xFFFFFF : 0x000000;
 #endif
 }
+
+const char* get_wind_direction_string(int degrees) {
+    static const char* directions[] = {"N", "NE", "E", "SE", "S", "SW", "W", "NW"};
+    int index = ((degrees + 22) % 360) / 45;
+    return directions[index];
+}

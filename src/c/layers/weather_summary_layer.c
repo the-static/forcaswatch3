@@ -1,6 +1,7 @@
 #include "weather_summary_layer.h"
 #include "c/appendix/persist.h"
 #include "c/appendix/config.h"
+#include "c/appendix/math.h"
 
 static Layer *s_weather_summary_layer;
 static TextLayer *s_detail_layer;
@@ -25,8 +26,19 @@ static TextLayer *s_temp_layer;
 #endif
 
 static const GPathInfo WIND_ARROW_POINTS = {
-  .num_points = 4,
-  .points = (GPoint []) {{0, -WIND_ARROW_SCALE_Y}, {WIND_ARROW_SCALE_X, WIND_ARROW_SCALE_Y}, {0, WIND_ARROW_MID_Y}, {-WIND_ARROW_SCALE_X, WIND_ARROW_SCALE_Y}}
+  .num_points = 10,
+  .points = (GPoint []) {
+    {0, -WIND_ARROW_SCALE_Y},                                 // Tip
+    {WIND_ARROW_SCALE_X/2, -WIND_ARROW_SCALE_Y + 5},          // Right head corner
+    {WIND_ARROW_SCALE_X/6, -WIND_ARROW_SCALE_Y + 5},          // Right neck
+    {WIND_ARROW_SCALE_X/6, WIND_ARROW_SCALE_Y - 5},           // Right tail top
+    {WIND_ARROW_SCALE_X/2, WIND_ARROW_SCALE_Y},               // Right tail bottom
+    {0, WIND_ARROW_SCALE_Y - 3},                              // Tail notch
+    {-WIND_ARROW_SCALE_X/2, WIND_ARROW_SCALE_Y},              // Left tail bottom
+    {-WIND_ARROW_SCALE_X/6, WIND_ARROW_SCALE_Y - 5},          // Left tail top
+    {-WIND_ARROW_SCALE_X/6, -WIND_ARROW_SCALE_Y + 5},         // Left neck
+    {-WIND_ARROW_SCALE_X/2, -WIND_ARROW_SCALE_Y + 5}          // Left head corner
+  }
 };
 static GPath *s_wind_arrow_path;
 
@@ -138,12 +150,15 @@ void weather_summary_layer_refresh() {
     int pollen = persist_get_pollen_index();
     const char* unit = g_config->celsius ? "m/s" : "mph";
 
+    int deg = persist_get_wind_deg();
+    const char* dir = get_wind_direction_string(deg);
+
     if (gust > speed) {
-        snprintf(s_wind_buffer, sizeof(s_wind_buffer), "Wind: %d(%d) %s", 
-                 speed, gust, unit);
+        snprintf(s_wind_buffer, sizeof(s_wind_buffer), "Wind: %d(%d) %s %s", 
+                 speed, gust, unit, dir);
     } else {
-        snprintf(s_wind_buffer, sizeof(s_wind_buffer), "Wind: %d %s", 
-                 speed, unit);
+        snprintf(s_wind_buffer, sizeof(s_wind_buffer), "Wind: %d %s %s", 
+                 speed, unit, dir);
     }
     text_layer_set_text(s_temp_layer, s_wind_buffer);
     
