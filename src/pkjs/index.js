@@ -114,13 +114,17 @@ function syncSettingsFromWatch(payload) {
 }
 
 function syncFetchTimeFromWatch(payload) {
-    var watchForecastStart = payload.FORECAST_START; // Unix timestamp in seconds
-    if (!(watchForecastStart > 0)) return;
+    var watchFetchTime = payload.APP_FETCH_TIME; // Exact timestamp from phone's last fetch
+    var watchForecastStart = payload.FORECAST_START; // Forecast start (usually rounded to hour)
+    
+    // Prioritize exact fetch time, fall back to forecast start if missing
+    var syncTime = watchFetchTime || watchForecastStart;
+    if (!(syncTime > 0)) return;
 
     var lastFetchSuccessString = localStorage.getItem(KEY_LAST_FETCH_SUCCESS);
     var lastFetchSuccess = lastFetchSuccessString ? JSON.parse(lastFetchSuccessString) : null;
     
-    var watchDate = new Date(watchForecastStart * 1000);
+    var watchDate = new Date(syncTime * 1000);
     var phoneDate = lastFetchSuccess ? new Date(lastFetchSuccess.time) : new Date(0);
     
     // If the watch data is newer (or we have no phone data), trust the watch

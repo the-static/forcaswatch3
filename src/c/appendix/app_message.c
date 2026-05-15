@@ -212,6 +212,11 @@ void app_message_send_startup_state(bool has_forecast_data) {
     if (forecast_start > 0) {
         dict_write_uint32(outbox, MESSAGE_KEY_FORECAST_START, (uint32_t)forecast_start);
     }
+    
+    time_t app_fetch_time = persist_get_app_fetch_time();
+    if (app_fetch_time > 0) {
+        dict_write_uint32(outbox, MESSAGE_KEY_APP_FETCH_TIME, (uint32_t)app_fetch_time);
+    }
 
     // Send current config to sync phone-side settings
     if (g_config) {
