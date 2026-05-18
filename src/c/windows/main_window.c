@@ -11,21 +11,13 @@
 #include "c/appendix/persist.h"
 #include "c/appendix/memory_log.h"
 
-#if defined(PBL_PLATFORM_EMERY)
-#define FORECAST_HEIGHT 69
-#define WEATHER_STATUS_HEIGHT 19
-#define TIME_HEIGHT 61
-#define CALENDAR_HEIGHT 61
-
-#define EMERY_WINDOW_PAD_X 2
-#define EMERY_WINDOW_PAD_TOP 2
-#define EMERY_WINDOW_PAD_BOTTOM 4
-#else
 #define FORECAST_HEIGHT 51
 #define WEATHER_STATUS_HEIGHT 14
 #define TIME_HEIGHT 45
 #define CALENDAR_HEIGHT 45
-#endif
+#define EMERY_WINDOW_PAD_X 2
+#define EMERY_WINDOW_PAD_TOP 2
+#define EMERY_WINDOW_PAD_BOTTOM 4
 // emery: increase top calendar status row height to fit larger month and icon alignment.
 #ifdef PBL_PLATFORM_EMERY
 #define CALENDAR_STATUS_HEIGHT 20
