@@ -8,7 +8,12 @@ var clayConfig = require('./clay/config.js');
 var customClay = require('./clay/inject.js');
 var storageKeys = require('./storage-keys.js');
 var pkg = require('../../package.json');
-var activeFixture = require('./active-fixture.generated.js');
+var activeFixture;
+try {
+    activeFixture = require('./active-fixture.generated.js');
+} catch (e) {
+    activeFixture = null;
+}
 var pebbleColors = require('./pebble-colors.js');
 
 /**
