@@ -672,7 +672,7 @@ static void forecast_update_proc(Layer *layer, GContext *ctx)
 
 static int temp_label_string_width(const char *text)
 {
-    const GFont font = fonts_get_system_font(SYS_FONT_18);
+    const GFont font = fonts_get_system_font(FONT_KEY_GOTHIC_18);
     const GRect box = GRect(0, 0, TEMP_LABEL_MEASURE_BOX_W, TEMP_LABEL_MEASURE_BOX_H);
     const GSize sz = graphics_text_layout_get_content_size(text, font, box, GTextOverflowModeFill,
                                                            GTextAlignmentRight);
