@@ -54,10 +54,10 @@ static void precip_chart_update_proc(Layer *layer, GContext *ctx) {
             snprintf(lo_str, sizeof(lo_str), "%d", loc_lo);
             
 #if defined(PBL_PLATFORM_EMERY)
-            int hi_y = -4;
-            int lo_y = chart_h - 26;
-            int temp_height = 28;
-            const char* temp_font = SYS_FONT_18;
+            int hi_y = -2;
+            int lo_y = chart_h - 22;
+            int temp_height = 20;
+            const char* temp_font = FONT_KEY_GOTHIC_18;
 #else
             int hi_y = -2;
             int lo_y = chart_h - 16;
