@@ -198,6 +198,7 @@ static void weather_status_update_proc(Layer *layer, GContext *ctx) {
 
 void weather_status_layer_create(Layer* parent_layer, GRect frame) {
     s_weather_status_layer = layer_create(frame);
+    layer_set_clips(s_weather_status_layer, false);
     GRect bounds = layer_get_bounds(s_weather_status_layer);
 
     s_arrow_path = gpath_create(&ARROW_PATH_INFO);
