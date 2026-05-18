@@ -4,19 +4,6 @@
 #include "c/appendix/config.h"
 #include "c/appendix/memory_log.h"
 
-#if defined(PBL_PLATFORM_EMERY)
-#define LEFT_AXIS_LABEL_STRIP_MIN_W 21
-#define LEFT_AXIS_LABEL_TO_GRAPH_GAP 3
-#define LEFT_AXIS_GRAPH_INSET_DEFAULT (LEFT_AXIS_LABEL_STRIP_MIN_W + LEFT_AXIS_LABEL_TO_GRAPH_GAP)
-#define TEMP_LABEL_PAD 3
-#define TEMP_LABEL_H 27
-#define TEMP_LABEL_MEASURE_BOX_W 200
-#define TEMP_LABEL_MEASURE_BOX_H 40
-#define BOTTOM_AXIS_FONT_OFFSET 5
-#define LABEL_PADDING 28
-#define BOTTOM_AXIS_H 14
-#define MARGIN_TEMP_H 10
-#else
 #define LEFT_AXIS_LABEL_STRIP_MIN_W 15
 #define LEFT_AXIS_LABEL_TO_GRAPH_GAP 2
 #define LEFT_AXIS_GRAPH_INSET_DEFAULT (LEFT_AXIS_LABEL_STRIP_MIN_W + LEFT_AXIS_LABEL_TO_GRAPH_GAP)
@@ -27,7 +14,6 @@
 #define BOTTOM_AXIS_FONT_OFFSET 4 // Adjustment for whitespace at top of font
 #define BOTTOM_AXIS_H 10          // Height of the bottom axis (hour labels)
 #define MARGIN_TEMP_H 7           // Height of margins for the temperature plot
-#endif
 #ifdef PBL_PLATFORM_EMERY
 #define HOUR_LABEL_MIN_SPACING 20 // Minimum horizontal spacing for hour labels
 #define FORECAST_BOTTOM_PAD 10
