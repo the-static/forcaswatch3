@@ -2,6 +2,7 @@
 #include "c/appendix/config.h"
 #include "c/appendix/persist.h"
 #include "c/appendix/memory_log.h"
+#include "c/services/watch_services.h"
 
 // MT = Margin Top
 #if defined(PBL_PLATFORM_EMERY)
@@ -11,6 +12,8 @@
 #define MT_TIME 14
 #define MT_AM_PM 7
 #endif
+#define MT_TIME_LECO 2
+#define MT_AM_PM_LECO 2
 
 
 static TextLayer *s_container_layer;
@@ -63,14 +66,15 @@ static void text_layer_move_frame(TextLayer *text_layer, GRect frame) {
 void time_layer_tick() {
     // Get a tm structure
     time_t temp = time(NULL);
-    struct tm *tick_time = s_zulu_time ? gmtime(&temp) : localtime(&temp);
+    struct tm tick_time = watch_services_localtime();
+    struct tm *tick_time_ptr = s_zulu_time ? gmtime(&temp) : &tick_time;
 
     // Format the time into a buffer
     static char s_buffer[12];
     if (s_zulu_time) {
-        strftime(s_buffer, sizeof(s_buffer), "%H:%M:%S", tick_time);
+        strftime(s_buffer, sizeof(s_buffer), "%H:%M:%S", tick_time_ptr);
     } else {
-        config_format_time(s_buffer, 12, tick_time);
+        config_format_time(s_buffer, 12, tick_time_ptr);
     }
 
     // Update the time and AM/PM indicator
@@ -78,7 +82,7 @@ void time_layer_tick() {
     if (s_zulu_time) {
         text_layer_set_text(s_am_pm_layer, "Z");
     } else if (g_config->show_am_pm) {
-        text_layer_set_text(s_am_pm_layer, tick_time->tm_hour < 12 ? "AM" : "PM");
+        text_layer_set_text(s_am_pm_layer, tick_time_ptr->tm_hour < 12 ? "AM" : "PM");
     }
     text_layer_set_text_color(s_am_pm_layer, GColorWhite);
     text_layer_set_background_color(s_am_pm_layer, GColorClear);
@@ -117,10 +121,25 @@ void time_layer_tick() {
     int text_top = -MT_TIME + (bounds.size.h/2 - text_h/2) - 8; // Shift up by 8 pixels
     int text_left = 5;
 
+    // emery: nudge LECO time text upward slightly to keep optical centering.
+#ifdef PBL_PLATFORM_EMERY
+    if (g_config->time_font == TIME_FONT_LECO) {
+        text_top -= MT_TIME_LECO;
+    }
+#endif
+
     // Update layer positions and visibility
     text_layer_move_frame(s_time_layer, GRect(text_left, text_top, content_w, time_size.h));
-    if (show_suffix)
-        text_layer_move_frame(s_am_pm_layer, GRect(time_size.w, MT_TIME - MT_AM_PM, 30, time_size.h));
+    if (show_suffix) {
+        int am_pm_y = MT_TIME - MT_AM_PM;
+        // emery: nudge LECO AM/PM down slightly to align with larger time numerals.
+#ifdef PBL_PLATFORM_EMERY
+        if (g_config->time_font == TIME_FONT_LECO) {
+            am_pm_y += MT_AM_PM_LECO;
+        }
+#endif
+        text_layer_move_frame(s_am_pm_layer, GRect(time_size.w, am_pm_y, 30, time_size.h));
+    }
     layer_set_hidden(text_layer_get_layer(s_am_pm_layer), !show_suffix);
 }
 

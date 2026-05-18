@@ -1,7 +1,7 @@
 {
   "name": "forecaswatch2",
   "author": "Matt Rossman",
-  "version": "1.32.0",
+  "version": "1.33.0",
   "buildProfile": "{{buildProfile}}",
   "keywords": [
     "pebble-app"
@@ -19,7 +19,8 @@
       "aplite",
       "basalt",
       "diorite",
-      "emery"
+      "emery",
+      "flint"
     ],
     "watchapp": {
       "watchface": false

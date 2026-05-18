@@ -2,6 +2,7 @@
 #include "persist.h"
 #include "math.h"
 #include "memory_log.h"
+#include "c/services/watch_services.h"
 
 // NOTE: g_config is a global config variable
 Config *g_config;
@@ -66,7 +67,7 @@ int config_localize_temp(int temp_f) {
 }
 
 int config_format_time(char *s, size_t maxsize, const struct tm * tm_p) {
-    int res = strftime(s, maxsize, clock_is_24h_style() ? "%H:%M:%S" : "%I:%M:%S", tm_p);
+    int res = strftime(s, maxsize, watch_services_clock_is_24h_style() ? "%H:%M:%S" : "%I:%M:%S", tm_p);
     if (!g_config->time_lead_zero) {
         // Remove leading zero if configured as such
         if (s[0] == '0') 
@@ -88,9 +89,8 @@ int config_axis_hour(int hour) {
 int config_n_today() {
     // Returns the index of the calendar box that holds today's date
 
-    time_t today = time(NULL);
-    struct tm *tm_today = localtime(&today);
-    int wday = tm_today->tm_wday;
+    struct tm tm_today = watch_services_localtime();
+    int wday = tm_today.tm_wday;
     // Offset if user wants to start the week on monday
     wday = g_config->start_mon ? (wday + 6) % 7 : wday;
     // Offset if user wants to show the previous week first
@@ -102,7 +102,12 @@ int config_n_today() {
 GFont config_time_font() {
     const char *font_keys[] = {
         [TIME_FONT_ROBOTO] = FONT_KEY_ROBOTO_BOLD_SUBSET_49,
+#ifdef PBL_PLATFORM_EMERY
+        // emery: use larger LECO font size
+        [TIME_FONT_LECO] = FONT_KEY_LECO_60_NUMBERS_AM_PM,
+#else
         [TIME_FONT_LECO] = FONT_KEY_LECO_42_NUMBERS,
+#endif
         [TIME_FONT_BITHAM] = FONT_KEY_BITHAM_42_MEDIUM_NUMBERS
     };
     int16_t font_index = g_config->time_font;

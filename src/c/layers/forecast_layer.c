@@ -25,9 +25,17 @@
 #define TEMP_LABEL_MEASURE_BOX_W 200
 #define TEMP_LABEL_MEASURE_BOX_H 40
 #define BOTTOM_AXIS_FONT_OFFSET 4 // Adjustment for whitespace at top of font
-#define LABEL_PADDING 20          // Minimum width a label should cover
 #define BOTTOM_AXIS_H 10          // Height of the bottom axis (hour labels)
 #define MARGIN_TEMP_H 7           // Height of margins for the temperature plot
+// emery: reserve extra bottom space for larger hour labels and tick marks.
+#ifdef PBL_PLATFORM_EMERY
+#define HOUR_LABEL_MIN_SPACING 24 // Minimum horizontal spacing for hour labels
+#define FORECAST_BOTTOM_PAD 10
+#define EMERY_AXIS_LABEL_TOP 6
+#define EMERY_AXIS_LABEL_H 14
+#else
+#define HOUR_LABEL_MIN_SPACING 20 // Minimum horizontal spacing for hour labels
+#define FORECAST_BOTTOM_PAD 0
 #endif
 #define NIGHT_HATCH_SPACING PBL_IF_COLOR_ELSE(6, 7)
 #define NIGHT_HATCH_COLOR GColorDarkGray
@@ -38,6 +46,7 @@
 #define NIGHT_BOUNDARY_COLOR_PRECIP PBL_IF_COLOR_ELSE(GColorVividCerulean, GColorWhite)
 #define FORECAST_STEP_SECONDS (60 * 60)
 #define DAY_SECONDS (24 * 60 * 60)
+#define MAX_FORECAST_ENTRIES 24
 
 typedef struct
 {
@@ -76,6 +85,11 @@ static int s_axis_left_w = LEFT_AXIS_GRAPH_INSET_DEFAULT;
 static int s_label_strip_w = LEFT_AXIS_LABEL_STRIP_MIN_W;
 static char s_buffer_lo[12];
 static char s_buffer_hi[12];
+static GPoint s_points_temp[MAX_FORECAST_ENTRIES];
+static GPoint s_points_precip[MAX_FORECAST_ENTRIES + 2];
+static GPath s_path_precip_area_under;
+static GPath s_path_precip_top;
+static GPath s_path_temp;
 
 static RenderSpec make_render_spec()
 {
@@ -94,7 +108,7 @@ static RenderSpec make_render_spec()
 static ForecastLayout compute_layout(GRect bounds)
 {
     ForecastLayout layout;
-    layout.graph_bounds = GRect(s_axis_left_w, 0, bounds.size.w - s_axis_left_w, bounds.size.h);
+    layout.graph_bounds = GRect(s_axis_left_w, 0, bounds.size.w - s_axis_left_w, bounds.size.h - FORECAST_BOTTOM_PAD);
     layout.graph_plot_rect = GRect(layout.graph_bounds.origin.x, 0, layout.graph_bounds.size.w, layout.graph_bounds.size.h - BOTTOM_AXIS_H);
     layout.w = layout.graph_bounds.size.w;
     layout.h = layout.graph_bounds.size.h;
@@ -454,6 +468,8 @@ static void draw_night_boundaries_over_precip(GContext *ctx, GRect graph_plot_re
     }
 }
 
+static GSize temp_label_string_size(const char *text);
+
 static void forecast_update_proc(Layer *layer, GContext *ctx)
 {
     MEMORY_LOG_HEAP("forecast_update:enter");
@@ -466,7 +482,8 @@ static void forecast_update_proc(Layer *layer, GContext *ctx)
     int h = layout.h;
 
     // Load data from storage
-    const int num_entries = persist_get_num_entries();
+    const int raw_num_entries = persist_get_num_entries();
+    const int num_entries = raw_num_entries > MAX_FORECAST_ENTRIES ? MAX_FORECAST_ENTRIES : raw_num_entries;
     MemoryHeapProbe redraw_probe = MEMORY_HEAP_PROBE_START("forecast_update");
     if (num_entries < 2)
     {
@@ -486,9 +503,6 @@ static void forecast_update_proc(Layer *layer, GContext *ctx)
     persist_get_precip_trend(precips, num_entries);
 
     // Allocate point arrays for plots
-    GPoint points_temp[num_entries];
-    GPoint points_precip[num_entries + 2]; // We need 2 more to complete the area
-
     // Calculate the temperature range
     int lo, hi;
     min_max(temps, num_entries, &lo, &hi);
@@ -508,8 +522,8 @@ static void forecast_update_proc(Layer *layer, GContext *ctx)
     graphics_context_set_text_color(ctx, GColorWhite);
     graphics_context_set_stroke_color(ctx, GColorLightGray);
 
-    // Round this division up by adding (divisor - 1) to the dividend
-    const int entries_per_label = ((float)LABEL_PADDING + (entry_w - 1)) / entry_w;
+    // Round this division up by adding (divisor - 1) to the dividend.
+    const int entries_per_label = ((float)HOUR_LABEL_MIN_SPACING + (entry_w - 1)) / entry_w;
     for (int i = 0; i < num_entries; ++i)
     {
         int entry_x = graph_bounds.origin.x + i * entry_w;
@@ -517,7 +531,7 @@ static void forecast_update_proc(Layer *layer, GContext *ctx)
         // Save a point for the precipitation probability
         int precip = precips[i];
         int precip_h = (float)precip / 100.0 * (h - BOTTOM_AXIS_H);
-        points_precip[i] = GPoint(entry_x, h - BOTTOM_AXIS_H - precip_h);
+        s_points_precip[i] = GPoint(entry_x, h - BOTTOM_AXIS_H - precip_h);
 
         // Save a point for the temperature reading
         int temp = temps[i];
@@ -526,79 +540,103 @@ static void forecast_update_proc(Layer *layer, GContext *ctx)
         {
             temp_h = (int)(((int32_t)(temp - lo) * temp_plot_h) / range_safe);
         }
-        points_temp[i] = GPoint(entry_x, h - temp_h - MARGIN_TEMP_H - BOTTOM_AXIS_H);
+        s_points_temp[i] = GPoint(entry_x, h - temp_h - MARGIN_TEMP_H - BOTTOM_AXIS_H);
 
-        if (i % entries_per_label == 0)
-        {
-            // Draw a text hour label at the appropriate interval
-            char buf[4];
-            snprintf(buf, sizeof(buf), "%d", config_axis_hour(forecast_start_local->tm_hour + i));
-            graphics_draw_text(ctx, buf,
-                               fonts_get_system_font(SYS_FONT_14),
-                               GRect(entry_x - 20, h - BOTTOM_AXIS_H - BOTTOM_AXIS_FONT_OFFSET, 40, BOTTOM_AXIS_H),
-                               GTextOverflowModeWordWrap,
-                               GTextAlignmentCenter,
-                               NULL);
-        }
-        else if ((i + entries_per_label / 2) % entries_per_label == 0)
-        {
-            // Just draw a tick between hour labels
-            graphics_draw_line(ctx,
-                               GPoint(entry_x, h - BOTTOM_AXIS_H - 0),
-                               GPoint(entry_x, h - BOTTOM_AXIS_H + 4));
-        }
+        // emery: draw emphasized major/minor bottom-axis ticks for improved readability.
+#ifdef PBL_PLATFORM_EMERY
+        const bool is_label_tick = (i % entries_per_label) == 0;
+        const GColor tick_color = is_label_tick ? GColorLightGray : GColorDarkGray;
+        graphics_context_set_stroke_width(ctx, 1);
+        graphics_context_set_stroke_color(ctx, tick_color);
+        graphics_draw_line(ctx,
+                           GPoint(entry_x, h - BOTTOM_AXIS_H - 0),
+                           GPoint(entry_x, h - BOTTOM_AXIS_H + (is_label_tick ? 6 : 4)));
+#endif
     }
 
+// non-emery: draw labels with classic font-offset positioning and midpoint ticks.
+#ifndef PBL_PLATFORM_EMERY
+    for (int label_i = 0; label_i < num_entries; label_i += entries_per_label)
+    {
+        const int label_x = graph_bounds.origin.x + (int)(label_i * entry_w);
+        char buf[4];
+
+        snprintf(buf, sizeof(buf), "%d", config_axis_hour(forecast_start_local->tm_hour + label_i));
+        const int label_y = h - BOTTOM_AXIS_H - BOTTOM_AXIS_FONT_OFFSET;
+        const int label_h = BOTTOM_AXIS_H;
+        graphics_draw_text(ctx, buf,
+                           fonts_get_system_font(FONT_KEY_GOTHIC_14),
+                           GRect(label_x - 20, label_y, 40, label_h),
+                           GTextOverflowModeWordWrap,
+                           GTextAlignmentCenter,
+                           NULL);
+
+        const int next_label_i = label_i + entries_per_label;
+        const int midpoint_i = label_i + entries_per_label / 2;
+        if (midpoint_i > label_i && midpoint_i < next_label_i && midpoint_i < num_entries)
+        {
+            const int tick_x = graph_bounds.origin.x + (int)(midpoint_i * entry_w);
+            graphics_draw_line(ctx,
+                               GPoint(tick_x, h - BOTTOM_AXIS_H - 0),
+                               GPoint(tick_x, h - BOTTOM_AXIS_H + 4));
+        }
+    }
+// emery: draw labels lower in the reserved pad and skip midpoint tick loop.
+#else
+    for (int label_i = 0; label_i < num_entries; label_i += entries_per_label)
+    {
+        const int label_x = graph_bounds.origin.x + (int)(label_i * entry_w);
+        char buf[4];
+
+        snprintf(buf, sizeof(buf), "%d", config_axis_hour(forecast_start_local->tm_hour + label_i));
+        const int label_y = h - BOTTOM_AXIS_H + EMERY_AXIS_LABEL_TOP;
+        const int label_h = EMERY_AXIS_LABEL_H;
+        graphics_draw_text(ctx, buf,
+                           fonts_get_system_font(FONT_KEY_GOTHIC_14),
+                           GRect(label_x - 20, label_y, 40, label_h),
+                           GTextOverflowModeWordWrap,
+                           GTextAlignmentCenter,
+                           NULL);
+    }
+#endif
+
     // Complete the area under the precipitation
-    points_precip[num_entries] = GPoint(graph_bounds.origin.x + w, h - BOTTOM_AXIS_H);
-    points_precip[num_entries + 1] = GPoint(graph_bounds.origin.x, h - BOTTOM_AXIS_H);
+    s_points_precip[num_entries] = GPoint(graph_bounds.origin.x + w, h - BOTTOM_AXIS_H);
+    s_points_precip[num_entries + 1] = GPoint(graph_bounds.origin.x, h - BOTTOM_AXIS_H);
 
     // Fill the precipitation area
-    GPathInfo path_info_precip = {
-        .num_points = num_entries + 2,
-        .points = points_precip};
-    MEMORY_HEAP_PROBE_SAMPLE("before_precip_path_create", &redraw_probe);
-    GPath *path_precip_area_under = gpath_create(&path_info_precip);
-    MEMORY_HEAP_PROBE_SAMPLE("after_precip_path_create", &redraw_probe);
+    s_path_precip_area_under.num_points = num_entries + 2;
+    s_path_precip_area_under.points = s_points_precip;
+    MEMORY_HEAP_PROBE_SAMPLE("before_precip_path_draw", &redraw_probe);
     graphics_context_set_fill_color(ctx, PRECIP_FILL_COLOR);
-    gpath_draw_filled(ctx, path_precip_area_under);
-    MEMORY_HEAP_PROBE_SAMPLE("before_precip_path_destroy", &redraw_probe);
-    gpath_destroy(path_precip_area_under);
-    MEMORY_HEAP_PROBE_SAMPLE("after_precip_path_destroy", &redraw_probe);
+    gpath_draw_filled(ctx, &s_path_precip_area_under);
+    MEMORY_HEAP_PROBE_SAMPLE("after_precip_path_draw", &redraw_probe);
 
     if (render_spec.draw_night_overlay)
     {
         draw_night_hatch_over_precip(ctx, graph_plot_rect, forecast_start, forecast_end, &night_segments,
-                                     points_precip, num_entries);
+                                     s_points_precip, num_entries);
         draw_night_boundaries_over_precip(ctx, graph_plot_rect, forecast_start, forecast_end, &night_segments,
-                                          points_precip, num_entries);
+                                          s_points_precip, num_entries);
     }
 
     // Draw the precipitation line
-    path_info_precip.num_points = num_entries;
-    MEMORY_HEAP_PROBE_SAMPLE("before_precip_top_create", &redraw_probe);
-    GPath *path_precip_top = gpath_create(&path_info_precip);
-    MEMORY_HEAP_PROBE_SAMPLE("after_precip_top_create", &redraw_probe);
+    s_path_precip_top.num_points = num_entries;
+    s_path_precip_top.points = s_points_precip;
+    MEMORY_HEAP_PROBE_SAMPLE("before_precip_top_draw", &redraw_probe);
     graphics_context_set_stroke_color(ctx, GColorPictonBlue);
     graphics_context_set_stroke_width(ctx, 1);
-    gpath_draw_outline_open(ctx, path_precip_top);
-    MEMORY_HEAP_PROBE_SAMPLE("before_precip_top_destroy", &redraw_probe);
-    gpath_destroy(path_precip_top);
-    MEMORY_HEAP_PROBE_SAMPLE("after_precip_top_destroy", &redraw_probe);
+    gpath_draw_outline_open(ctx, &s_path_precip_top);
+    MEMORY_HEAP_PROBE_SAMPLE("after_precip_top_draw", &redraw_probe);
 
     // Draw the temperature line
-    GPathInfo path_info_temp = {
-        .num_points = num_entries,
-        .points = points_temp};
-    MEMORY_HEAP_PROBE_SAMPLE("before_temp_path_create", &redraw_probe);
-    GPath *path_temp = gpath_create(&path_info_temp);
-    MEMORY_HEAP_PROBE_SAMPLE("after_temp_path_create", &redraw_probe);
+    s_path_temp.num_points = num_entries;
+    s_path_temp.points = s_points_temp;
+    MEMORY_HEAP_PROBE_SAMPLE("before_temp_path_draw", &redraw_probe);
     graphics_context_set_stroke_color(ctx, PBL_IF_COLOR_ELSE(GColorRed, GColorWhite));
     graphics_context_set_stroke_width(ctx, 3); // Only odd stroke width values supported
-    gpath_draw_outline_open(ctx, path_temp);
-    MEMORY_HEAP_PROBE_SAMPLE("before_temp_path_destroy", &redraw_probe);
-    gpath_destroy(path_temp);
-    MEMORY_HEAP_PROBE_SAMPLE("after_temp_path_destroy", &redraw_probe);
+    gpath_draw_outline_open(ctx, &s_path_temp);
+    MEMORY_HEAP_PROBE_SAMPLE("after_temp_path_draw", &redraw_probe);
 
     // Draw a line for the bottom axis
     graphics_context_set_stroke_color(ctx, render_spec.axis_color);
@@ -610,13 +648,23 @@ static void forecast_update_proc(Layer *layer, GContext *ctx)
     graphics_fill_rect(ctx, GRect(0, 0, s_axis_left_w, h - BOTTOM_AXIS_H), 0, GCornerNone); // Paint over plot bleeding
     graphics_draw_line(ctx, GPoint(graph_bounds.origin.x, 0), GPoint(graph_bounds.origin.x, axis_y));
     graphics_context_set_text_color(ctx, GColorWhite);
+    GSize hi_size = temp_label_string_size(s_buffer_hi);
+    GSize lo_size = temp_label_string_size(s_buffer_lo);
+    // emery: anchor hi/lo labels to the top/bottom of the axis strip to avoid clipping.
+#ifdef PBL_PLATFORM_EMERY
+    const int hi_y = 0;
+    const int lo_y = axis_y - lo_size.h - 2;
+#else
+    const int hi_y = -3;
+    const int lo_y = 22;
+#endif
     graphics_draw_text(ctx, s_buffer_hi,
-                       fonts_get_system_font(SYS_FONT_18),
-                       GRect(0, -3, s_label_strip_w, TEMP_LABEL_H),
+                       fonts_get_system_font(FONT_KEY_GOTHIC_18),
+                       GRect(0, hi_y, s_label_strip_w, hi_size.h),
                        GTextOverflowModeFill, GTextAlignmentRight, NULL);
     graphics_draw_text(ctx, s_buffer_lo,
-                       fonts_get_system_font(SYS_FONT_18),
-                       GRect(0, 22, s_label_strip_w, TEMP_LABEL_H),
+                       fonts_get_system_font(FONT_KEY_GOTHIC_18),
+                       GRect(0, lo_y, s_label_strip_w, lo_size.h),
                        GTextOverflowModeFill, GTextAlignmentRight, NULL);
     MEMORY_HEAP_PROBE_LOG_MIN(&redraw_probe);
     MEMORY_LOG_HEAP("forecast_update:exit");
@@ -629,6 +677,14 @@ static int temp_label_string_width(const char *text)
     const GSize sz = graphics_text_layout_get_content_size(text, font, box, GTextOverflowModeFill,
                                                            GTextAlignmentRight);
     return sz.w;
+}
+
+static GSize temp_label_string_size(const char *text)
+{
+    const GFont font = fonts_get_system_font(FONT_KEY_GOTHIC_18);
+    const GRect box = GRect(0, 0, TEMP_LABEL_MEASURE_BOX_W, TEMP_LABEL_MEASURE_BOX_H);
+    return graphics_text_layout_get_content_size(text, font, box, GTextOverflowModeFill,
+                                                 GTextAlignmentRight);
 }
 
 static void text_labels_refresh()
@@ -656,7 +712,6 @@ static void text_labels_refresh()
     {
         s_axis_left_w = graph_inset_w;
     }
-
 }
 
 void forecast_layer_create(Layer *parent_layer, GRect frame)

@@ -14,7 +14,8 @@ if [[ "${1:-}" == "--" ]]; then
 fi
 
 scripts/ensure-pebble-sdk.sh
-bash scripts/prepare-package.sh "$profile"
+mise run prepare-package -- "$profile"
+node scripts/prepare-fixture.js
 pebble build "$@"
 
 if [[ "$profile" == "dev" ]]; then
