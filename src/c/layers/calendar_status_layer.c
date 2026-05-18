@@ -16,8 +16,8 @@
 #define BATTERY_Y(bounds_h) (((bounds_h) - BATTERY_H) / 2)
 #define MONTH_FONT_KEY FONT_KEY_GOTHIC_24
 #else
-#define STATUS_ICON_Y(bounds_h, icon_h) ((void)(bounds_h), (void)(icon_h), 0)
-#define BATTERY_Y(bounds_h) ((void)(bounds_h), 1)
+#define STATUS_ICON_Y(bounds_h, icon_h) 0
+#define BATTERY_Y(bounds_h) 1
 #define MONTH_FONT_KEY FONT_KEY_GOTHIC_18
 #endif
 

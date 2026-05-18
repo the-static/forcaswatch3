@@ -7,16 +7,13 @@
 #define FONT_18_OFFSET 9
 #define FONT_14_OFFSET 4
 #define CITY_INIT_WIDTH 139
-#define ARROW_H 11
-#define ARROW_HEAD_H 4
-#define ARROW_HEAD_W 3
-#define ARROW_W 8
 #define MARGIN 3
 #else
 #define FONT_18_OFFSET 7
 #define FONT_14_OFFSET 3
 #define CITY_INIT_WIDTH 100
 #define MARGIN 2
+#endif
 
 // emery: use larger text and arrow geometry
 #ifdef PBL_PLATFORM_EMERY

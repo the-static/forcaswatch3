@@ -133,7 +133,7 @@ void weather_summary_layer_create(Layer* parent_layer, GRect frame) {
 void weather_summary_layer_refresh() {
     if (!s_weather_summary_layer) return;
 
-    static char s_wind_buffer[32];
+    static char s_wind_buffer[48];
     int speed = persist_get_wind_speed();
     int gust = persist_get_wind_gust();
     int pollen = persist_get_pollen_index();

@@ -27,6 +27,7 @@
 #define BOTTOM_AXIS_FONT_OFFSET 4 // Adjustment for whitespace at top of font
 #define BOTTOM_AXIS_H 10          // Height of the bottom axis (hour labels)
 #define MARGIN_TEMP_H 7           // Height of margins for the temperature plot
+#endif
 // emery: reserve extra bottom space for larger hour labels and tick marks.
 #ifdef PBL_PLATFORM_EMERY
 #define HOUR_LABEL_MIN_SPACING 24 // Minimum horizontal spacing for hour labels

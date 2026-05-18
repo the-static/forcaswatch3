@@ -10,6 +10,7 @@
 #define FONT_OFFSET 7
 #else
 #define FONT_OFFSET 5
+#endif
 #define EMERY_CALENDAR_TEXT_SHIFT_Y 5
 #define EMERY_CALENDAR_TEXT_SHIFT_X 1
 

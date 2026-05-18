@@ -16,15 +16,16 @@
 #define WEATHER_STATUS_HEIGHT 19
 #define TIME_HEIGHT 61
 #define CALENDAR_HEIGHT 61
-#define CALENDAR_STATUS_HEIGHT 18
+
+#define EMERY_WINDOW_PAD_X 2
+#define EMERY_WINDOW_PAD_TOP 2
+#define EMERY_WINDOW_PAD_BOTTOM 4
 #else
 #define FORECAST_HEIGHT 51
 #define WEATHER_STATUS_HEIGHT 14
 #define TIME_HEIGHT 45
 #define CALENDAR_HEIGHT 45
-#define EMERY_WINDOW_PAD_X 2
-#define EMERY_WINDOW_PAD_TOP 2
-#define EMERY_WINDOW_PAD_BOTTOM 4
+#endif
 // emery: increase top calendar status row height to fit larger month and icon alignment.
 #ifdef PBL_PLATFORM_EMERY
 #define CALENDAR_STATUS_HEIGHT 20
@@ -98,7 +99,8 @@ static void main_window_load(Window *window) {
     } else {
         precip_chart_layer_create(s_window_layer, GRect(content_x, forecast_y, forecast_w, forecast_h));
     }
-    loading_layer_create(s_window_layer, GRect(content_x, weather_status_y, content_w, h - EMERY_WINDOW_PAD_BOTTOM - weather_status_y));
+    GRect loading_rect = { .origin = { content_x, weather_status_y }, .size = { content_w, h - EMERY_WINDOW_PAD_BOTTOM - weather_status_y } };
+    loading_layer_create(s_window_layer, loading_rect);
 #else
     calendar_status_layer_create(s_window_layer, GRect(0, 0, w, CALENDAR_STATUS_HEIGHT + 1));
     if (s_target_top_content == TOP_CONTENT_CALENDAR) {
@@ -186,6 +188,7 @@ static void tap_handler(AccelAxisType axis, int32_t direction) {
     main_window_refresh();
 }
 
+#if defined(PBL_PLATFORM_EMERY)
 static void touch_handler(const TouchEvent *event, void *context) {
     reset_idle_timer();
     if (s_tap_locked) return;
@@ -203,6 +206,7 @@ static void touch_handler(const TouchEvent *event, void *context) {
         main_window_refresh();
     }
 }
+#endif
 
 static void up_click_handler(ClickRecognizerRef recognizer, void *context) {
     reset_idle_timer();
