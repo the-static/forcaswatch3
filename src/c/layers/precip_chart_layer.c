@@ -67,12 +67,12 @@ static void precip_chart_update_proc(Layer *layer, GContext *ctx) {
             
             // Draw hi temp perfectly centered in the empty space between this and the next precip bar
             graphics_draw_text(ctx, hi_str, fonts_get_system_font(temp_font),
-                               GRect(i * bar_w, hi_y, bar_w + 8, temp_height),
+                               GRect(i * bar_w, hi_y, bar_w, temp_height),
                                GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
             
             // Draw lo temp perfectly centered in the empty space between this and the next precip bar
             graphics_draw_text(ctx, lo_str, fonts_get_system_font(temp_font),
-                               GRect(i * bar_w, lo_y, bar_w + 8, temp_height),
+                               GRect(i * bar_w, lo_y, bar_w, temp_height),
                                GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
         }
 

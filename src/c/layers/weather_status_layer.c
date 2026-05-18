@@ -2,6 +2,7 @@
 #include "c/appendix/persist.h"
 #include "c/appendix/config.h"
 #include "c/appendix/memory_log.h"
+#include "c/services/watch_services.h"
 
 #if defined(PBL_PLATFORM_EMERY)
 #define FONT_18_OFFSET 9
@@ -103,7 +104,18 @@ static void sun_event_layer_refresh() {
     struct tm *sun_time = localtime(&first_sun_event_time);
 
     static char s_buffer[8];
-    config_format_time(s_buffer, 8, sun_time);
+    int hour = sun_time->tm_hour;
+    int min = sun_time->tm_min;
+    bool is_24h = watch_services_clock_is_24h_style();
+    if (!is_24h) {
+        hour = hour % 12;
+        if (hour == 0) hour = 12;
+    }
+    if (g_config->time_lead_zero) {
+        snprintf(s_buffer, sizeof(s_buffer), "%02d:%02d", hour, min);
+    } else {
+        snprintf(s_buffer, sizeof(s_buffer), "%d:%02d", hour, min);
+    }
 
     // Display this time on the TextLayer
     text_layer_set_text(s_next_sun_event_layer, s_buffer);

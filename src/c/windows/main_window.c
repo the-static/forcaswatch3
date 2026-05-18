@@ -283,6 +283,29 @@ void main_window_refresh() {
     int w = bounds.size.w;
     int h = bounds.size.h;
 
+    int content_x = 0;
+    int content_w = w;
+    int forecast_w = w;
+    int calendar_y = CALENDAR_STATUS_HEIGHT;
+    int calendar_h = CALENDAR_HEIGHT;
+    int forecast_y = h - FORECAST_HEIGHT;
+    int forecast_h = FORECAST_HEIGHT;
+
+#ifdef PBL_PLATFORM_EMERY
+    content_x = EMERY_WINDOW_PAD_X;
+    int content_y = EMERY_WINDOW_PAD_TOP;
+    content_w = w - EMERY_WINDOW_PAD_X * 2;
+    forecast_w = w - content_x;
+    int content_h = h - EMERY_WINDOW_PAD_TOP - EMERY_WINDOW_PAD_BOTTOM - CALENDAR_STATUS_HEIGHT - WEATHER_STATUS_HEIGHT;
+    int time_h;
+    compute_content_layout(content_h, &calendar_h, &time_h, &forecast_h);
+
+    calendar_y = content_y + CALENDAR_STATUS_HEIGHT;
+    int time_y = calendar_y + calendar_h;
+    int weather_status_y = time_y + time_h;
+    forecast_y = weather_status_y + WEATHER_STATUS_HEIGHT;
+#endif
+
     if (s_drawn_top_content != s_target_top_content) {
         if (s_drawn_top_content == TOP_CONTENT_CALENDAR) {
             calendar_layer_destroy();
@@ -294,10 +317,10 @@ void main_window_refresh() {
         
         if (s_drawn_top_content == TOP_CONTENT_CALENDAR) {
             calendar_layer_create(s_window_layer,
-                    GRect(0, CALENDAR_STATUS_HEIGHT, bounds.size.w, CALENDAR_HEIGHT));
+                    GRect(content_x, calendar_y, content_w, calendar_h));
         } else {
             weather_summary_layer_create(s_window_layer,
-                    GRect(0, CALENDAR_STATUS_HEIGHT, bounds.size.w, CALENDAR_HEIGHT));
+                    GRect(content_x, calendar_y, content_w, calendar_h));
         }
     }
 
@@ -312,10 +335,10 @@ void main_window_refresh() {
         
         if (s_drawn_bottom_content == BOTTOM_CONTENT_FORECAST) {
             forecast_layer_create(s_window_layer,
-                    GRect(0, h - FORECAST_HEIGHT, w, FORECAST_HEIGHT));
+                    GRect(content_x, forecast_y, forecast_w, forecast_h));
         } else {
             precip_chart_layer_create(s_window_layer,
-                    GRect(0, h - FORECAST_HEIGHT, w, FORECAST_HEIGHT));
+                    GRect(content_x, forecast_y, forecast_w, forecast_h));
         }
     }
 
