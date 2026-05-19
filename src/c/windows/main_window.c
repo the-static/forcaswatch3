@@ -30,6 +30,17 @@ static Layer *s_window_layer;
 
 #define BOTTOM_CONTENT_FORECAST 0
 #define BOTTOM_CONTENT_PRECIP 1
+#define BOTTOM_CONTENT_DAY_0 2
+#define BOTTOM_CONTENT_DAY_1 3
+#define BOTTOM_CONTENT_DAY_2 4
+#define BOTTOM_CONTENT_DAY_3 5
+#define BOTTOM_CONTENT_DAY_4 6
+#define BOTTOM_CONTENT_DAY_5 7
+#define BOTTOM_CONTENT_DAY_6 8
+
+static bool is_bottom_content_forecast(int16_t content) {
+    return content == BOTTOM_CONTENT_FORECAST || (content >= BOTTOM_CONTENT_DAY_0 && content <= BOTTOM_CONTENT_DAY_6);
+}
 
 static int16_t s_target_top_content;
 static int16_t s_target_bottom_content;
@@ -86,7 +97,12 @@ static void main_window_load(Window *window) {
     }
     time_layer_create(s_window_layer, GRect(content_x, time_y, content_w, time_h));
     weather_status_layer_create(s_window_layer, GRect(content_x, weather_status_y, content_w, WEATHER_STATUS_HEIGHT));
-    if (s_target_bottom_content == BOTTOM_CONTENT_FORECAST) {
+    if (is_bottom_content_forecast(s_target_bottom_content)) {
+        int day = -1;
+        if (s_target_bottom_content >= BOTTOM_CONTENT_DAY_0 && s_target_bottom_content <= BOTTOM_CONTENT_DAY_6) {
+            day = s_target_bottom_content - BOTTOM_CONTENT_DAY_0;
+        }
+        forecast_layer_set_day(day);
         forecast_layer_create(s_window_layer, GRect(content_x, forecast_y, forecast_w, forecast_h));
     } else {
         precip_chart_layer_create(s_window_layer, GRect(content_x, forecast_y, forecast_w, forecast_h));
@@ -102,7 +118,12 @@ static void main_window_load(Window *window) {
     }
     time_layer_create(s_window_layer, GRect(0, h - FORECAST_HEIGHT - WEATHER_STATUS_HEIGHT - TIME_HEIGHT, w, TIME_HEIGHT));
     weather_status_layer_create(s_window_layer, GRect(0, h - FORECAST_HEIGHT - WEATHER_STATUS_HEIGHT, w, WEATHER_STATUS_HEIGHT));
-    if (s_target_bottom_content == BOTTOM_CONTENT_FORECAST) {
+    if (is_bottom_content_forecast(s_target_bottom_content)) {
+        int day = -1;
+        if (s_target_bottom_content >= BOTTOM_CONTENT_DAY_0 && s_target_bottom_content <= BOTTOM_CONTENT_DAY_6) {
+            day = s_target_bottom_content - BOTTOM_CONTENT_DAY_0;
+        }
+        forecast_layer_set_day(day);
         forecast_layer_create(s_window_layer, GRect(0, h - FORECAST_HEIGHT, w, FORECAST_HEIGHT));
     } else {
         precip_chart_layer_create(s_window_layer, GRect(0, h - FORECAST_HEIGHT, w, FORECAST_HEIGHT));
@@ -181,6 +202,7 @@ static void tap_handler(AccelAxisType axis, int32_t direction) {
 }
 
 #if defined(PBL_PLATFORM_EMERY)
+// emery: handle touch events on Pebble Emery to toggle content or select a day forecast.
 static void touch_handler(const TouchEvent *event, void *context) {
     reset_idle_timer();
     if (s_tap_locked) return;
@@ -193,7 +215,23 @@ static void touch_handler(const TouchEvent *event, void *context) {
         if (event->y < bounds.size.h / 2) {
             s_target_top_content = (s_target_top_content == TOP_CONTENT_CALENDAR) ? TOP_CONTENT_WEATHER : TOP_CONTENT_CALENDAR;
         } else {
-            s_target_bottom_content = (s_target_bottom_content == BOTTOM_CONTENT_FORECAST) ? BOTTOM_CONTENT_PRECIP : BOTTOM_CONTENT_FORECAST;
+            if (s_target_bottom_content == BOTTOM_CONTENT_PRECIP) {
+                int content_x = EMERY_WINDOW_PAD_X;
+                int forecast_w = bounds.size.w - content_x;
+                int bar_w = forecast_w / 7;
+                if (bar_w > 0) {
+                    int day_index = (event->x - content_x) / bar_w;
+                    if (day_index >= 0 && day_index <= 6) {
+                        s_target_bottom_content = BOTTOM_CONTENT_DAY_0 + day_index;
+                    } else {
+                        s_target_bottom_content = BOTTOM_CONTENT_FORECAST;
+                    }
+                } else {
+                    s_target_bottom_content = BOTTOM_CONTENT_FORECAST;
+                }
+            } else {
+                s_target_bottom_content = BOTTOM_CONTENT_PRECIP;
+            }
         }
         main_window_refresh();
     }
@@ -208,7 +246,7 @@ static void up_click_handler(ClickRecognizerRef recognizer, void *context) {
 
 static void down_click_handler(ClickRecognizerRef recognizer, void *context) {
     reset_idle_timer();
-    s_target_bottom_content = (s_target_bottom_content == BOTTOM_CONTENT_FORECAST) ? BOTTOM_CONTENT_PRECIP : BOTTOM_CONTENT_FORECAST;
+    s_target_bottom_content = is_bottom_content_forecast(s_target_bottom_content) ? BOTTOM_CONTENT_PRECIP : BOTTOM_CONTENT_FORECAST;
     main_window_refresh();
 }
 
@@ -249,6 +287,7 @@ void main_window_create() {
     // Register with TickTimerService
     tick_timer_service_subscribe(SECOND_UNIT, tick_handler);
 #if defined(PBL_PLATFORM_EMERY)
+    // emery: subscribe to touch service if available on Emery platform
     if (touch_service_is_enabled()) {
         touch_service_subscribe(touch_handler, NULL);
     } else {
@@ -284,6 +323,7 @@ void main_window_refresh() {
     int forecast_h = FORECAST_HEIGHT;
 
 #ifdef PBL_PLATFORM_EMERY
+    // emery: compute relative layout bounds for the taller Emery screen
     content_x = EMERY_WINDOW_PAD_X;
     int content_y = EMERY_WINDOW_PAD_TOP;
     content_w = w - EMERY_WINDOW_PAD_X * 2;
@@ -316,22 +356,37 @@ void main_window_refresh() {
         }
     }
 
-    if (s_drawn_bottom_content != s_target_bottom_content) {
-        if (s_drawn_bottom_content == BOTTOM_CONTENT_FORECAST) {
+    bool drawn_is_forecast = is_bottom_content_forecast(s_drawn_bottom_content);
+    bool target_is_forecast = is_bottom_content_forecast(s_target_bottom_content);
+
+    if (drawn_is_forecast != target_is_forecast) {
+        if (drawn_is_forecast) {
             forecast_layer_destroy();
-        } else if (s_drawn_bottom_content == BOTTOM_CONTENT_PRECIP) {
+        } else {
             precip_chart_layer_destroy();
         }
         
         s_drawn_bottom_content = s_target_bottom_content;
         
-        if (s_drawn_bottom_content == BOTTOM_CONTENT_FORECAST) {
+        if (target_is_forecast) {
+            int day = -1;
+            if (s_target_bottom_content >= BOTTOM_CONTENT_DAY_0 && s_target_bottom_content <= BOTTOM_CONTENT_DAY_6) {
+                day = s_target_bottom_content - BOTTOM_CONTENT_DAY_0;
+            }
+            forecast_layer_set_day(day);
             forecast_layer_create(s_window_layer,
                     GRect(content_x, forecast_y, forecast_w, forecast_h));
         } else {
             precip_chart_layer_create(s_window_layer,
                     GRect(content_x, forecast_y, forecast_w, forecast_h));
         }
+    } else if (target_is_forecast && s_drawn_bottom_content != s_target_bottom_content) {
+        int day = -1;
+        if (s_target_bottom_content >= BOTTOM_CONTENT_DAY_0 && s_target_bottom_content <= BOTTOM_CONTENT_DAY_6) {
+            day = s_target_bottom_content - BOTTOM_CONTENT_DAY_0;
+        }
+        forecast_layer_set_day(day);
+        s_drawn_bottom_content = s_target_bottom_content;
     }
 
     time_layer_refresh();
@@ -345,7 +400,12 @@ void main_window_refresh() {
         weather_summary_layer_refresh();
     }
     
-    if (s_drawn_bottom_content == BOTTOM_CONTENT_FORECAST) {
+    if (is_bottom_content_forecast(s_drawn_bottom_content)) {
+        int day = -1;
+        if (s_drawn_bottom_content >= BOTTOM_CONTENT_DAY_0 && s_drawn_bottom_content <= BOTTOM_CONTENT_DAY_6) {
+            day = s_drawn_bottom_content - BOTTOM_CONTENT_DAY_0;
+        }
+        forecast_layer_set_day(day);
         forecast_layer_refresh();
     } else {
         precip_chart_layer_refresh();
