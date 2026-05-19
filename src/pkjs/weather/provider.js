@@ -170,7 +170,7 @@ function writeGeocodeBackoff() {
 }
 
 var WeatherProvider = function() {
-    this.numEntries = 24;
+    this.numEntries = 48;
     this.name = 'Template';
     this.id = 'interface';
     this.location = null; // Address query used for overriding the GPS

@@ -8,4 +8,4 @@ void forecast_layer_refresh();
 
 void forecast_layer_destroy();
 
-void forecast_layer_set_day(int day);
+void forecast_layer_set_page(int page);

@@ -32,7 +32,7 @@
 #define NIGHT_BOUNDARY_COLOR_PRECIP PBL_IF_COLOR_ELSE(GColorVividCerulean, GColorWhite)
 #define FORECAST_STEP_SECONDS (60 * 60)
 #define DAY_SECONDS (24 * 60 * 60)
-#define MAX_FORECAST_ENTRIES 24
+#define MAX_FORECAST_ENTRIES 48
 
 typedef struct
 {
@@ -76,11 +76,11 @@ static GPoint s_points_precip[MAX_FORECAST_ENTRIES + 2];
 static GPath s_path_precip_area_under;
 static GPath s_path_precip_top;
 static GPath s_path_temp;
-static int s_active_day = -1;
+static int s_active_page = 0;
 
-void forecast_layer_set_day(int day)
+void forecast_layer_set_page(int page)
 {
-    s_active_day = day;
+    s_active_page = page;
 }
 
 static RenderSpec make_render_spec()
@@ -158,10 +158,10 @@ static NightSegments compute_night_segments(time_t graph_start, time_t graph_end
         return night_segments;
     }
 
-    if (s_active_day >= 0)
+    if (s_active_page == 1)
     {
-        sun_event_times[0] += (time_t)s_active_day * DAY_SECONDS;
-        sun_event_times[1] += (time_t)s_active_day * DAY_SECONDS;
+        sun_event_times[0] += (time_t)DAY_SECONDS;
+        sun_event_times[1] += (time_t)DAY_SECONDS;
     }
 
     SunEvent events[6];
@@ -480,18 +480,39 @@ static void forecast_update_proc(Layer *layer, GContext *ctx)
     int h = layout.h;
 
     // Load data from storage
-    int num_entries;
-    if (s_active_day == -1)
-    {
-        const int raw_num_entries = persist_get_num_entries();
-        num_entries = raw_num_entries > MAX_FORECAST_ENTRIES ? MAX_FORECAST_ENTRIES : raw_num_entries;
-    }
-    else
-    {
-        num_entries = MAX_FORECAST_ENTRIES;
-    }
+    const int raw_num_entries = persist_get_num_entries();
+    const int total_entries = raw_num_entries > MAX_FORECAST_ENTRIES ? MAX_FORECAST_ENTRIES : raw_num_entries;
 
     MemoryHeapProbe redraw_probe = MEMORY_HEAP_PROBE_START("forecast_update");
+    if (total_entries < 2)
+    {
+        graphics_context_set_fill_color(ctx, GColorBlack);
+        graphics_fill_rect(ctx, bounds, 0, GCornerNone);
+        MEMORY_LOG_HEAP("forecast_update:exit");
+        return;
+    }
+
+    int16_t all_temps[MAX_FORECAST_ENTRIES];
+    uint8_t all_precips[MAX_FORECAST_ENTRIES];
+    persist_get_temp_trend(all_temps, total_entries);
+    persist_get_precip_trend(all_precips, total_entries);
+
+    int start_idx = 0;
+    if (s_active_page == 1)
+    {
+        start_idx = 24;
+    }
+
+    int num_entries = 0;
+    if (total_entries > start_idx)
+    {
+        num_entries = total_entries - start_idx;
+        if (num_entries > 24)
+        {
+            num_entries = 24;
+        }
+    }
+
     if (num_entries < 2)
     {
         graphics_context_set_fill_color(ctx, GColorBlack);
@@ -500,45 +521,13 @@ static void forecast_update_proc(Layer *layer, GContext *ctx)
         return;
     }
 
-    time_t forecast_start;
-    int16_t temps[MAX_FORECAST_ENTRIES];
-    uint8_t precips[MAX_FORECAST_ENTRIES];
-
-    if (s_active_day == -1)
+    time_t forecast_start = persist_get_forecast_start() + (time_t)start_idx * FORECAST_STEP_SECONDS;
+    int16_t temps[24];
+    uint8_t precips[24];
+    for (int i = 0; i < num_entries; ++i)
     {
-        forecast_start = persist_get_forecast_start();
-        persist_get_temp_trend(temps, num_entries);
-        persist_get_precip_trend(precips, num_entries);
-    }
-    else
-    {
-        // Compute start of s_active_day (local midnight)
-        time_t now = time(NULL);
-        struct tm *t_local = localtime(&now);
-        t_local->tm_hour = 0;
-        t_local->tm_min = 0;
-        t_local->tm_sec = 0;
-        time_t today_midnight = mktime(t_local);
-        forecast_start = today_midnight + s_active_day * DAY_SECONDS;
-
-        // Generate simulated values
-        uint8_t precips_7day[7];
-        int16_t temps_hi[7];
-        int16_t temps_lo[7];
-        persist_get_precip_7day(precips_7day);
-        persist_get_temp_7day_hi(temps_hi);
-        persist_get_temp_7day_lo(temps_lo);
-
-        int16_t hi = temps_hi[s_active_day];
-        int16_t lo = temps_lo[s_active_day];
-        uint8_t daily_precip = precips_7day[s_active_day];
-
-        for (int i = 0; i < num_entries; ++i)
-        {
-            int32_t cos_val = cos_lookup(((i - 15) * TRIG_MAX_ANGLE) / 24);
-            temps[i] = lo + ((hi - lo) * (cos_val + TRIG_MAX_RATIO)) / (2 * TRIG_MAX_RATIO);
-            precips[i] = daily_precip;
-        }
+        temps[i] = all_temps[start_idx + i];
+        precips[i] = all_precips[start_idx + i];
     }
 
     const time_t forecast_end = forecast_start + (num_entries - 1) * FORECAST_STEP_SECONDS;
@@ -732,21 +721,38 @@ static GSize temp_label_string_size(const char *text)
 
 static void text_labels_refresh()
 {
-    int hi_val, lo_val;
-    if (s_active_day == -1)
+    int hi_val = 0;
+    int lo_val = 0;
+    
+    int16_t temps[MAX_FORECAST_ENTRIES];
+    int raw_num_entries = persist_get_num_entries();
+    int total_entries = raw_num_entries > MAX_FORECAST_ENTRIES ? MAX_FORECAST_ENTRIES : raw_num_entries;
+    
+    if (total_entries > 0)
     {
-        hi_val = persist_get_temp_hi();
-        lo_val = persist_get_temp_lo();
+        persist_get_temp_trend(temps, total_entries);
+        
+        int start_idx = 0;
+        int end_idx = 24;
+        if (s_active_page == 1)
+        {
+            start_idx = 24;
+            end_idx = 48;
+        }
+        
+        if (total_entries > start_idx)
+        {
+            int actual_end = total_entries < end_idx ? total_entries : end_idx;
+            hi_val = temps[start_idx];
+            lo_val = temps[start_idx];
+            for (int i = start_idx + 1; i < actual_end; ++i)
+            {
+                if (temps[i] > hi_val) hi_val = temps[i];
+                if (temps[i] < lo_val) lo_val = temps[i];
+            }
+        }
     }
-    else
-    {
-        int16_t temps_hi[7];
-        int16_t temps_lo[7];
-        persist_get_temp_7day_hi(temps_hi);
-        persist_get_temp_7day_lo(temps_lo);
-        hi_val = temps_hi[s_active_day];
-        lo_val = temps_lo[s_active_day];
-    }
+    
     snprintf(s_buffer_hi, sizeof(s_buffer_hi), "%d", config_localize_temp(hi_val));
     snprintf(s_buffer_lo, sizeof(s_buffer_lo), "%d", config_localize_temp(lo_val));
 
