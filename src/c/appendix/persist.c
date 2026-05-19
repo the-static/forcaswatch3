@@ -61,7 +61,7 @@ void persist_init() {
             .color_us_federal = GColorWhite,
             .color_time = GColorWhite,
             .day_night_shading = true,
-            .top_content = TOP_CONTENT_CALENDAR
+            .top_content = TOP_CONTENT_WEATHER
         };
         persist_set_config(config);
     }

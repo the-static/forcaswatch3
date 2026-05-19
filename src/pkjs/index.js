@@ -99,7 +99,7 @@ function syncSettingsFromWatch(payload) {
     syncSetting('CLAY_VIBE', 'vibe', Boolean);
     syncSetting('CLAY_SHOW_AM_PM', 'timeShowAmPm', Boolean);
     syncSetting('CLAY_DAY_NIGHT_SHADING', 'dayNightShading', Boolean);
-    syncSetting('CLAY_TOP_CONTENT', 'topContent', function(v) { return ['calendar', 'weather'][v] || 'calendar'; });
+    syncSetting('CLAY_TOP_CONTENT', 'topContent', function(v) { return ['calendar', 'weather'][v] || 'weather'; });
 
     // Colors (convert hex integers to strings if necessary)
     var syncColor = function(payloadKey, settingsKey) {
@@ -532,7 +532,7 @@ function sendClaySettings(onSuccess, onFailure) {
         "CLAY_COLOR_US_FEDERAL": app.settings.hasOwnProperty('colorUSFederal') ? app.settings.colorUSFederal : 16777215,
         "CLAY_COLOR_TIME": app.settings.hasOwnProperty('colorTime') ? app.settings.colorTime : 16777215,
         "CLAY_DAY_NIGHT_SHADING": app.settings.hasOwnProperty('dayNightShading') ? app.settings.dayNightShading : true,
-        "CLAY_TOP_CONTENT": ['calendar', 'weather'].indexOf(app.settings.topContent),
+        "CLAY_TOP_CONTENT": ['calendar', 'weather'].indexOf(app.settings.topContent !== undefined ? app.settings.topContent : 'weather'),
         "CLAY_ACTIVE": 0
     }
     Pebble.sendAppMessage(payload, function() {
@@ -610,7 +610,7 @@ function clayTryDefaults() {
     localStorage.setItem('clay-settings', JSON.stringify(persistClay));
 
     if (!Object.prototype.hasOwnProperty.call(persistClay, 'topContent')) {
-        persistClay.topContent = 'calendar';
+        persistClay.topContent = 'weather';
         localStorage.setItem('clay-settings', JSON.stringify(persistClay));
     }
 
@@ -643,7 +643,8 @@ function getDefaultClaySettings() {
         showQt: true,
         vibe: false,
         btIcons: 'both',
-        telemetryEnabled: true
+        telemetryEnabled: true,
+        topContent: 'weather'
     };
 }
 

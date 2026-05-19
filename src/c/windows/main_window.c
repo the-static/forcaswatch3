@@ -64,7 +64,7 @@ static void main_window_load(Window *window) {
 
     s_last_config_top_content = g_config->top_content;
     s_target_top_content = g_config->top_content;
-    s_target_bottom_content = (s_target_top_content == TOP_CONTENT_CALENDAR) ? BOTTOM_CONTENT_FORECAST : BOTTOM_CONTENT_PRECIP;
+    s_target_bottom_content = (s_target_top_content == TOP_CONTENT_WEATHER) ? BOTTOM_CONTENT_FORECAST : BOTTOM_CONTENT_PRECIP;
     s_drawn_top_content = s_target_top_content;
     s_drawn_bottom_content = s_target_bottom_content;
 
@@ -168,21 +168,15 @@ void main_window_set_clay_active(bool active) {
     reset_idle_timer();
 }
 
+#if defined(PBL_PLATFORM_EMERY)
 static bool s_tap_locked = false;
 
 static void tap_unlock_callback(void *data) {
     s_tap_locked = false;
 }
+#endif
 
-static void tap_handler(AccelAxisType axis, int32_t direction) {
-    if (s_tap_locked) return;
-    s_tap_locked = true;
-    app_timer_register(1000, tap_unlock_callback, NULL);
 
-    s_target_top_content = (s_target_top_content == TOP_CONTENT_CALENDAR) ? TOP_CONTENT_WEATHER : TOP_CONTENT_CALENDAR;
-    s_target_bottom_content = (s_target_top_content == TOP_CONTENT_CALENDAR) ? BOTTOM_CONTENT_FORECAST : BOTTOM_CONTENT_PRECIP;
-    main_window_refresh();
-}
 
 #if defined(PBL_PLATFORM_EMERY)
 // emery: handle touch events on Pebble Emery to toggle content or cycle bottom content.
@@ -257,11 +251,7 @@ void main_window_create() {
     // emery: subscribe to touch service if available on Emery platform
     if (touch_service_is_enabled()) {
         touch_service_subscribe(touch_handler, NULL);
-    } else {
-        accel_tap_service_subscribe(tap_handler);
     }
-#else
-    accel_tap_service_subscribe(tap_handler);
 #endif
 
 
@@ -274,7 +264,7 @@ void main_window_refresh() {
     if (s_last_config_top_content != g_config->top_content) {
         s_last_config_top_content = g_config->top_content;
         s_target_top_content = g_config->top_content;
-        s_target_bottom_content = (s_target_top_content == TOP_CONTENT_CALENDAR) ? BOTTOM_CONTENT_FORECAST : BOTTOM_CONTENT_PRECIP;
+        s_target_bottom_content = (s_target_top_content == TOP_CONTENT_WEATHER) ? BOTTOM_CONTENT_FORECAST : BOTTOM_CONTENT_PRECIP;
     }
 
     GRect bounds = layer_get_bounds(s_window_layer);
@@ -370,11 +360,7 @@ void main_window_destroy() {
 #if defined(PBL_PLATFORM_EMERY)
     if (touch_service_is_enabled()) {
         touch_service_unsubscribe();
-    } else {
-        accel_tap_service_unsubscribe();
     }
-#else
-    accel_tap_service_unsubscribe();
 #endif
     // Interface for destroying the main window (implicitly unloads contents)
     window_destroy(s_main_window);
