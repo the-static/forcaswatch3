@@ -76,12 +76,7 @@ static GPoint s_points_precip[MAX_FORECAST_ENTRIES + 2];
 static GPath s_path_precip_area_under;
 static GPath s_path_precip_top;
 static GPath s_path_temp;
-static int s_active_page = 0;
 
-void forecast_layer_set_page(int page)
-{
-    s_active_page = page;
-}
 
 static RenderSpec make_render_spec()
 {
@@ -158,16 +153,10 @@ static NightSegments compute_night_segments(time_t graph_start, time_t graph_end
         return night_segments;
     }
 
-    if (s_active_page == 1)
-    {
-        sun_event_times[0] += (time_t)DAY_SECONDS;
-        sun_event_times[1] += (time_t)DAY_SECONDS;
-    }
-
-    SunEvent events[6];
+    SunEvent events[8];
     int event_count = 0;
 
-    for (int day_offset = -1; day_offset <= 1; ++day_offset)
+    for (int day_offset = -1; day_offset <= 2; ++day_offset)
     {
         const time_t offset_seconds = (time_t)day_offset * DAY_SECONDS;
         events[event_count++] = (SunEvent){
@@ -481,38 +470,9 @@ static void forecast_update_proc(Layer *layer, GContext *ctx)
 
     // Load data from storage
     const int raw_num_entries = persist_get_num_entries();
-    const int total_entries = raw_num_entries > MAX_FORECAST_ENTRIES ? MAX_FORECAST_ENTRIES : raw_num_entries;
+    const int num_entries = raw_num_entries > MAX_FORECAST_ENTRIES ? MAX_FORECAST_ENTRIES : raw_num_entries;
 
     MemoryHeapProbe redraw_probe = MEMORY_HEAP_PROBE_START("forecast_update");
-    if (total_entries < 2)
-    {
-        graphics_context_set_fill_color(ctx, GColorBlack);
-        graphics_fill_rect(ctx, bounds, 0, GCornerNone);
-        MEMORY_LOG_HEAP("forecast_update:exit");
-        return;
-    }
-
-    int16_t all_temps[MAX_FORECAST_ENTRIES];
-    uint8_t all_precips[MAX_FORECAST_ENTRIES];
-    persist_get_temp_trend(all_temps, total_entries);
-    persist_get_precip_trend(all_precips, total_entries);
-
-    int start_idx = 0;
-    if (s_active_page == 1)
-    {
-        start_idx = 24;
-    }
-
-    int num_entries = 0;
-    if (total_entries > start_idx)
-    {
-        num_entries = total_entries - start_idx;
-        if (num_entries > 24)
-        {
-            num_entries = 24;
-        }
-    }
-
     if (num_entries < 2)
     {
         graphics_context_set_fill_color(ctx, GColorBlack);
@@ -521,14 +481,12 @@ static void forecast_update_proc(Layer *layer, GContext *ctx)
         return;
     }
 
-    time_t forecast_start = persist_get_forecast_start() + (time_t)start_idx * FORECAST_STEP_SECONDS;
-    int16_t temps[24];
-    uint8_t precips[24];
-    for (int i = 0; i < num_entries; ++i)
-    {
-        temps[i] = all_temps[start_idx + i];
-        precips[i] = all_precips[start_idx + i];
-    }
+    int16_t temps[MAX_FORECAST_ENTRIES];
+    uint8_t precips[MAX_FORECAST_ENTRIES];
+    persist_get_temp_trend(temps, num_entries);
+    persist_get_precip_trend(precips, num_entries);
+
+    time_t forecast_start = persist_get_forecast_start();
 
     const time_t forecast_end = forecast_start + (num_entries - 1) * FORECAST_STEP_SECONDS;
     NightSegments night_segments = {0};
@@ -726,30 +684,17 @@ static void text_labels_refresh()
     
     int16_t temps[MAX_FORECAST_ENTRIES];
     int raw_num_entries = persist_get_num_entries();
-    int total_entries = raw_num_entries > MAX_FORECAST_ENTRIES ? MAX_FORECAST_ENTRIES : raw_num_entries;
+    int num_entries = raw_num_entries > MAX_FORECAST_ENTRIES ? MAX_FORECAST_ENTRIES : raw_num_entries;
     
-    if (total_entries > 0)
+    if (num_entries > 0)
     {
-        persist_get_temp_trend(temps, total_entries);
-        
-        int start_idx = 0;
-        int end_idx = 24;
-        if (s_active_page == 1)
+        persist_get_temp_trend(temps, num_entries);
+        hi_val = temps[0];
+        lo_val = temps[0];
+        for (int i = 1; i < num_entries; ++i)
         {
-            start_idx = 24;
-            end_idx = 48;
-        }
-        
-        if (total_entries > start_idx)
-        {
-            int actual_end = total_entries < end_idx ? total_entries : end_idx;
-            hi_val = temps[start_idx];
-            lo_val = temps[start_idx];
-            for (int i = start_idx + 1; i < actual_end; ++i)
-            {
-                if (temps[i] > hi_val) hi_val = temps[i];
-                if (temps[i] < lo_val) lo_val = temps[i];
-            }
+            if (temps[i] > hi_val) hi_val = temps[i];
+            if (temps[i] < lo_val) lo_val = temps[i];
         }
     }
     

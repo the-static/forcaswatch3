@@ -29,11 +29,10 @@ static Window *s_main_window;
 static Layer *s_window_layer;
 
 #define BOTTOM_CONTENT_PRECIP 0
-#define BOTTOM_CONTENT_FORECAST_1 1
-#define BOTTOM_CONTENT_FORECAST_2 2
+#define BOTTOM_CONTENT_FORECAST 1
 
 static bool is_bottom_content_forecast(int16_t content) {
-    return content == BOTTOM_CONTENT_FORECAST_1 || content == BOTTOM_CONTENT_FORECAST_2;
+    return content == BOTTOM_CONTENT_FORECAST;
 }
 
 static int16_t s_target_top_content;
@@ -65,7 +64,7 @@ static void main_window_load(Window *window) {
 
     s_last_config_top_content = g_config->top_content;
     s_target_top_content = g_config->top_content;
-    s_target_bottom_content = (s_target_top_content == TOP_CONTENT_CALENDAR) ? BOTTOM_CONTENT_FORECAST_1 : BOTTOM_CONTENT_PRECIP;
+    s_target_bottom_content = (s_target_top_content == TOP_CONTENT_CALENDAR) ? BOTTOM_CONTENT_FORECAST : BOTTOM_CONTENT_PRECIP;
     s_drawn_top_content = s_target_top_content;
     s_drawn_bottom_content = s_target_bottom_content;
 
@@ -92,8 +91,6 @@ static void main_window_load(Window *window) {
     time_layer_create(s_window_layer, GRect(content_x, time_y, content_w, time_h));
     weather_status_layer_create(s_window_layer, GRect(content_x, weather_status_y, content_w, WEATHER_STATUS_HEIGHT));
     if (is_bottom_content_forecast(s_target_bottom_content)) {
-        int page = s_target_bottom_content == BOTTOM_CONTENT_FORECAST_2 ? 1 : 0;
-        forecast_layer_set_page(page);
         forecast_layer_create(s_window_layer, GRect(content_x, forecast_y, forecast_w, forecast_h));
     } else {
         precip_chart_layer_create(s_window_layer, GRect(content_x, forecast_y, forecast_w, forecast_h));
@@ -110,8 +107,6 @@ static void main_window_load(Window *window) {
     time_layer_create(s_window_layer, GRect(0, h - FORECAST_HEIGHT - WEATHER_STATUS_HEIGHT - TIME_HEIGHT, w, TIME_HEIGHT));
     weather_status_layer_create(s_window_layer, GRect(0, h - FORECAST_HEIGHT - WEATHER_STATUS_HEIGHT, w, WEATHER_STATUS_HEIGHT));
     if (is_bottom_content_forecast(s_target_bottom_content)) {
-        int page = s_target_bottom_content == BOTTOM_CONTENT_FORECAST_2 ? 1 : 0;
-        forecast_layer_set_page(page);
         forecast_layer_create(s_window_layer, GRect(0, h - FORECAST_HEIGHT, w, FORECAST_HEIGHT));
     } else {
         precip_chart_layer_create(s_window_layer, GRect(0, h - FORECAST_HEIGHT, w, FORECAST_HEIGHT));
@@ -185,7 +180,7 @@ static void tap_handler(AccelAxisType axis, int32_t direction) {
     app_timer_register(1000, tap_unlock_callback, NULL);
 
     s_target_top_content = (s_target_top_content == TOP_CONTENT_CALENDAR) ? TOP_CONTENT_WEATHER : TOP_CONTENT_CALENDAR;
-    s_target_bottom_content = (s_target_top_content == TOP_CONTENT_CALENDAR) ? BOTTOM_CONTENT_FORECAST_1 : BOTTOM_CONTENT_PRECIP;
+    s_target_bottom_content = (s_target_top_content == TOP_CONTENT_CALENDAR) ? BOTTOM_CONTENT_FORECAST : BOTTOM_CONTENT_PRECIP;
     main_window_refresh();
 }
 
@@ -203,7 +198,7 @@ static void touch_handler(const TouchEvent *event, void *context) {
         if (event->y < bounds.size.h / 2) {
             s_target_top_content = (s_target_top_content == TOP_CONTENT_CALENDAR) ? TOP_CONTENT_WEATHER : TOP_CONTENT_CALENDAR;
         } else {
-            s_target_bottom_content = (s_target_bottom_content + 1) % 3;
+            s_target_bottom_content = (s_target_bottom_content + 1) % 2;
         }
         main_window_refresh();
     }
@@ -218,7 +213,7 @@ static void up_click_handler(ClickRecognizerRef recognizer, void *context) {
 
 static void down_click_handler(ClickRecognizerRef recognizer, void *context) {
     reset_idle_timer();
-    s_target_bottom_content = (s_target_bottom_content + 1) % 3;
+    s_target_bottom_content = (s_target_bottom_content + 1) % 2;
     main_window_refresh();
 }
 
@@ -279,7 +274,7 @@ void main_window_refresh() {
     if (s_last_config_top_content != g_config->top_content) {
         s_last_config_top_content = g_config->top_content;
         s_target_top_content = g_config->top_content;
-        s_target_bottom_content = (s_target_top_content == TOP_CONTENT_CALENDAR) ? BOTTOM_CONTENT_FORECAST_1 : BOTTOM_CONTENT_PRECIP;
+        s_target_bottom_content = (s_target_top_content == TOP_CONTENT_CALENDAR) ? BOTTOM_CONTENT_FORECAST : BOTTOM_CONTENT_PRECIP;
     }
 
     GRect bounds = layer_get_bounds(s_window_layer);
@@ -341,18 +336,12 @@ void main_window_refresh() {
         s_drawn_bottom_content = s_target_bottom_content;
         
         if (target_is_forecast) {
-            int page = s_target_bottom_content == BOTTOM_CONTENT_FORECAST_2 ? 1 : 0;
-            forecast_layer_set_page(page);
             forecast_layer_create(s_window_layer,
                     GRect(content_x, forecast_y, forecast_w, forecast_h));
         } else {
             precip_chart_layer_create(s_window_layer,
                     GRect(content_x, forecast_y, forecast_w, forecast_h));
         }
-    } else if (target_is_forecast && s_drawn_bottom_content != s_target_bottom_content) {
-        int page = s_target_bottom_content == BOTTOM_CONTENT_FORECAST_2 ? 1 : 0;
-        forecast_layer_set_page(page);
-        s_drawn_bottom_content = s_target_bottom_content;
     }
 
     time_layer_refresh();
@@ -367,8 +356,6 @@ void main_window_refresh() {
     }
     
     if (is_bottom_content_forecast(s_drawn_bottom_content)) {
-        int page = s_drawn_bottom_content == BOTTOM_CONTENT_FORECAST_2 ? 1 : 0;
-        forecast_layer_set_page(page);
         forecast_layer_refresh();
     } else {
         precip_chart_layer_refresh();
