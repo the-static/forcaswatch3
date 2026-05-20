@@ -42,6 +42,10 @@ static TextLayer *s_city_layer;
 static TextLayer *s_current_temp_layer;
 static TextLayer *s_next_sun_event_layer;
 
+static char *s_city_buffer = NULL;
+static char *s_temp_buffer = NULL;
+static char *s_buffer = NULL;
+
 static GPath *s_arrow_path = NULL;
 static const GPathInfo ARROW_PATH_INFO = {
     // Downward facing arrow, centered at the origin
@@ -61,9 +65,9 @@ static void text_layer_move_frame(TextLayer *text_layer, GRect frame) {
 }
 
 static void city_layer_refresh() {
+    if (!s_city_buffer) return;
     // Set the city text layer contents from storage
-    static char s_city_buffer[20];
-    persist_get_city(s_city_buffer, sizeof(s_city_buffer));
+    persist_get_city(s_city_buffer, 20);
     text_layer_set_text(s_city_layer, s_city_buffer);
 
     // Dynamic resizing
@@ -85,8 +89,8 @@ static void city_layer_refresh() {
 }
 
 static void current_temp_layer_refresh() {
-    static char s_temp_buffer[8];
-    snprintf(s_temp_buffer, sizeof(s_temp_buffer), "• %d", config_localize_temp(persist_get_current_temp()));
+    if (!s_temp_buffer) return;
+    snprintf(s_temp_buffer, 8, "• %d", config_localize_temp(persist_get_current_temp()));
     text_layer_set_text(s_current_temp_layer, s_temp_buffer);
 
     // Dynamic resizing
@@ -103,7 +107,7 @@ static void sun_event_layer_refresh() {
     persist_get_sun_event_times(&first_sun_event_time, 1);
     struct tm *sun_time = localtime(&first_sun_event_time);
 
-    static char s_buffer[8];
+    if (!s_buffer) return;
     int hour = sun_time->tm_hour;
     int min = sun_time->tm_min;
     bool is_24h = watch_services_clock_is_24h_style();
@@ -112,9 +116,9 @@ static void sun_event_layer_refresh() {
         if (hour == 0) hour = 12;
     }
     if (g_config->time_lead_zero) {
-        snprintf(s_buffer, sizeof(s_buffer), "%02d:%02d", hour, min);
+        snprintf(s_buffer, 8, "%02d:%02d", hour, min);
     } else {
-        snprintf(s_buffer, sizeof(s_buffer), "%d:%02d", hour, min);
+        snprintf(s_buffer, 8, "%d:%02d", hour, min);
     }
 
     // Display this time on the TextLayer
@@ -197,6 +201,10 @@ static void weather_status_update_proc(Layer *layer, GContext *ctx) {
 }
 
 void weather_status_layer_create(Layer* parent_layer, GRect frame) {
+    s_city_buffer = malloc(20);
+    s_temp_buffer = malloc(8);
+    s_buffer = malloc(8);
+
     s_weather_status_layer = layer_create(frame);
     layer_set_clips(s_weather_status_layer, false);
     GRect bounds = layer_get_bounds(s_weather_status_layer);
@@ -237,6 +245,9 @@ void weather_status_layer_destroy() {
         gpath_destroy(s_arrow_path);
         s_arrow_path = NULL;
     }
+    if (s_city_buffer) { free(s_city_buffer); s_city_buffer = NULL; }
+    if (s_temp_buffer) { free(s_temp_buffer); s_temp_buffer = NULL; }
+    if (s_buffer) { free(s_buffer); s_buffer = NULL; }
     layer_destroy(s_weather_status_layer);
     s_weather_status_layer = NULL;
     MEMORY_LOG_HEAP("weather_status_layer_destroy:after");

@@ -72,3 +72,17 @@ time_t persist_get_last_sync_time();
 void persist_set_last_sync_time(time_t val);
 
 void persist_set_config(Config config);
+
+int persist_get_pws_temp();
+int persist_get_pws_precip_rate();
+int persist_get_pws_precip_total();
+int persist_get_pws_wind_speed();
+int persist_get_pws_wind_deg();
+int persist_get_pws_wind_gust();
+
+void persist_set_pws_temp(int val);
+void persist_set_pws_precip_rate(int val);
+void persist_set_pws_precip_total(int val);
+void persist_set_pws_wind_speed(int val);
+void persist_set_pws_wind_deg(int val);
+void persist_set_pws_wind_gust(int val);

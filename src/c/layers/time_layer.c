@@ -22,6 +22,8 @@ static TextLayer *s_am_pm_layer;
 static TextLayer *s_status_layer;
 
 static bool s_zulu_time = false;
+static char *s_buffer = NULL;
+static char *status_buffer = NULL;
 
 void time_layer_toggle_zulu() {
     s_zulu_time = !s_zulu_time;
@@ -29,6 +31,8 @@ void time_layer_toggle_zulu() {
 }
 
 void time_layer_create(Layer* parent_layer, GRect frame) {
+    s_buffer = malloc(12);
+    status_buffer = malloc(64);
     s_container_layer = text_layer_create(frame);
     s_time_layer = text_layer_create(GRect(0, 0, frame.size.w, frame.size.h));
     s_am_pm_layer = text_layer_create(GRect(0, 0, 30, frame.size.h));
@@ -70,9 +74,8 @@ void time_layer_tick() {
     struct tm *tick_time_ptr = s_zulu_time ? gmtime(&temp) : &tick_time;
 
     // Format the time into a buffer
-    static char s_buffer[12];
     if (s_zulu_time) {
-        strftime(s_buffer, sizeof(s_buffer), "%H:%M:%S", tick_time_ptr);
+        strftime(s_buffer, 12, "%H:%M:%S", tick_time_ptr);
     } else {
         config_format_time(s_buffer, 12, tick_time_ptr);
     }
@@ -88,7 +91,6 @@ void time_layer_tick() {
     text_layer_set_background_color(s_am_pm_layer, GColorClear);
 
     // Update status text
-    static char status_buffer[64];
     time_t last_sync = persist_get_last_sync_time();
     time_t app_fetch = persist_get_app_fetch_time();
     
@@ -105,7 +107,7 @@ void time_layer_tick() {
         strftime(a_buffer, sizeof(a_buffer), "%H:%M:%S", a_time);
     }
 
-    snprintf(status_buffer, sizeof(status_buffer), "App: %s | Phone: %s", f_buffer, a_buffer);
+    snprintf(status_buffer, 64, "App: %s | Phone: %s", f_buffer, a_buffer);
     text_layer_set_text(s_status_layer, status_buffer);
     
     // Reposition everything
@@ -158,5 +160,13 @@ void time_layer_destroy() {
     s_time_layer = NULL;
     text_layer_destroy(s_container_layer);
     s_container_layer = NULL;
+    if (s_buffer) {
+        free(s_buffer);
+        s_buffer = NULL;
+    }
+    if (status_buffer) {
+        free(status_buffer);
+        status_buffer = NULL;
+    }
     MEMORY_LOG_HEAP("time_layer_destroy:after");
 }

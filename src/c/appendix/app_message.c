@@ -7,6 +7,7 @@
 #include "c/layers/calendar_layer.h"
 #include "c/layers/calendar_status_layer.h"
 #include "c/layers/weather_summary_layer.h"
+#include "c/layers/pws_layer.h"
 #include "c/windows/main_window.h"
 #include "memory_log.h"
 #include <stdlib.h>
@@ -33,6 +34,9 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
     Tuple *pollen_tuple = dict_find(iterator, MESSAGE_KEY_POLLEN_INDEX);
     Tuple *app_fetch_time_tuple = dict_find(iterator, MESSAGE_KEY_APP_FETCH_TIME);
     Tuple *clay_active_tuple = dict_find(iterator, MESSAGE_KEY_CLAY_ACTIVE);
+#ifndef PBL_PLATFORM_APLITE
+    Tuple *pws_data_str_tuple = dict_find(iterator, MESSAGE_KEY_PWS_DATA_STR);
+#endif
 
     // Clay config options
     Tuple *clay_celsius_tuple = dict_find(iterator, MESSAGE_KEY_CLAY_CELSIUS);
@@ -89,6 +93,25 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
         if (wind_gust_tuple) persist_set_wind_gust((int)wind_gust_tuple->value->int32);
         if (pressure_tuple) persist_set_pressure((int)pressure_tuple->value->int32);
         if (pollen_tuple) persist_set_pollen_index((int)pollen_tuple->value->int32);
+#ifndef PBL_PLATFORM_APLITE
+        if (pws_data_str_tuple) {
+            char *str = (char*)pws_data_str_tuple->value->cstring;
+            char *curr = str;
+            int values[6] = {0};
+            for (int i = 0; i < 6; i++) {
+                values[i] = atoi(curr);
+                curr = strchr(curr, ',');
+                if (curr) curr++;
+                else break;
+            }
+            persist_set_pws_temp(values[0]);
+            persist_set_pws_precip_total(values[1]);
+            persist_set_pws_precip_rate(values[2]);
+            persist_set_pws_wind_speed(values[3]);
+            persist_set_pws_wind_deg(values[4]);
+            persist_set_pws_wind_gust(values[5]);
+        }
+#endif
         persist_set_app_fetch_time((time_t)app_fetch_time_tuple->value->int32);
         persist_set_last_sync_time(time(NULL));
         
@@ -134,6 +157,7 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
         calendar_layer_refresh();
         calendar_status_layer_refresh();
         weather_summary_layer_refresh();
+        pws_layer_refresh();
     }
     
     if (clay_celsius_tuple && clay_time_lead_zero_tuple && clay_axis_12h_tuple && clay_start_mon_tuple && clay_prev_week_tuple

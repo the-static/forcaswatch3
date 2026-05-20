@@ -7,6 +7,9 @@ static Layer *s_weather_summary_layer;
 static TextLayer *s_detail_layer;
 static TextLayer *s_temp_layer;
 
+static char *s_wind_buffer = NULL;
+static char *s_hum_buffer = NULL;
+
 #if defined(PBL_PLATFORM_EMERY)
 #define WIND_ARROW_SCALE_X 10
 #define WIND_ARROW_SCALE_Y 16
@@ -99,6 +102,9 @@ void weather_summary_layer_create(Layer* parent_layer, GRect frame) {
     s_weather_summary_layer = layer_create(frame);
     GRect bounds = layer_get_bounds(s_weather_summary_layer);
 
+    s_wind_buffer = malloc(48);
+    s_hum_buffer = malloc(32);
+
 #if defined(PBL_PLATFORM_EMERY)
     s_temp_layer = text_layer_create(GRect(0, 0, bounds.size.w, 30)); // Used for Wind
     text_layer_set_background_color(s_temp_layer, GColorClear);
@@ -131,9 +137,8 @@ void weather_summary_layer_create(Layer* parent_layer, GRect frame) {
 }
 
 void weather_summary_layer_refresh() {
-    if (!s_weather_summary_layer) return;
+    if (!s_weather_summary_layer || !s_wind_buffer || !s_hum_buffer) return;
 
-    static char s_wind_buffer[48];
     int speed = persist_get_wind_speed();
     int gust = persist_get_wind_gust();
     int pollen = persist_get_pollen_index();
@@ -143,10 +148,10 @@ void weather_summary_layer_refresh() {
     const char* dir = get_wind_direction_string(deg);
 
     if (gust > speed) {
-        snprintf(s_wind_buffer, sizeof(s_wind_buffer), "Wind: %d(%d) %s %s", 
+        snprintf(s_wind_buffer, 48, "Wind: %d(%d) %s %s", 
                  speed, gust, unit, dir);
     } else {
-        snprintf(s_wind_buffer, sizeof(s_wind_buffer), "Wind: %d %s %s", 
+        snprintf(s_wind_buffer, 48, "Wind: %d %s %s", 
                  speed, unit, dir);
     }
     text_layer_set_text(s_temp_layer, s_wind_buffer);
@@ -162,12 +167,11 @@ void weather_summary_layer_refresh() {
 #endif
     text_layer_set_text_alignment(s_temp_layer, GTextAlignmentLeft);
 
-    static char s_hum_buffer[32];
     int press = persist_get_pressure();
     if (pollen >= 0) {
-        snprintf(s_hum_buffer, sizeof(s_hum_buffer), "Hum: %d%%, Pol: %d/5", persist_get_humidity(), pollen);
+        snprintf(s_hum_buffer, 32, "Hum: %d%%, Pol: %d/5", persist_get_humidity(), pollen);
     } else {
-        snprintf(s_hum_buffer, sizeof(s_hum_buffer), "Hum: %d%%, %d.%02din", persist_get_humidity(), press / 100, press % 100);
+        snprintf(s_hum_buffer, 32, "Hum: %d%%, %d.%02din", persist_get_humidity(), press / 100, press % 100);
     }
     text_layer_set_text(s_detail_layer, s_hum_buffer);
 
@@ -178,6 +182,14 @@ void weather_summary_layer_destroy() {
     if (!s_weather_summary_layer) return;
     text_layer_destroy(s_temp_layer);
     text_layer_destroy(s_detail_layer);
+    if (s_wind_buffer) {
+        free(s_wind_buffer);
+        s_wind_buffer = NULL;
+    }
+    if (s_hum_buffer) {
+        free(s_hum_buffer);
+        s_hum_buffer = NULL;
+    }
     layer_destroy(s_weather_summary_layer);
     s_weather_summary_layer = NULL;
 }

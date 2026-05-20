@@ -5,7 +5,8 @@ enum key {
     TEMP_LO, TEMP_HI, TEMP_TREND, PRECIP_TREND, FORECAST_START, CITY, SUN_EVENT_START_TYPE, SUN_EVENT_TIMES, NUM_ENTRIES,
     CURRENT_TEMP, BATTERY_LEVEL, CONFIG,
     WIND_SPEED, WIND_DEG, HUMIDITY, WIND_GUST, PRECIP_7DAY, TEMP_7DAY_HI, TEMP_7DAY_LO, PRESSURE, POLLEN_INDEX,
-    APP_FETCH_TIME, LAST_SYNC_TIME
+    APP_FETCH_TIME, LAST_SYNC_TIME,
+    PWS_TEMP, PWS_PRECIP_RATE, PWS_PRECIP_TOTAL, PWS_WIND_SPEED, PWS_WIND_DEG, PWS_WIND_GUST
 }; // Deprecated: BATTERY_LEVEL
 
 void persist_init() {
@@ -254,4 +255,52 @@ void persist_set_last_sync_time(time_t val) {
 void persist_set_config(Config config) {
     persist_write_data(CONFIG, &config, sizeof(Config));
     config_refresh();  // Refresh global config variable
+}
+
+int persist_get_pws_temp() {
+    return persist_exists(PWS_TEMP) ? persist_read_int(PWS_TEMP) : 0;
+}
+
+int persist_get_pws_precip_rate() {
+    return persist_exists(PWS_PRECIP_RATE) ? persist_read_int(PWS_PRECIP_RATE) : 0;
+}
+
+int persist_get_pws_precip_total() {
+    return persist_exists(PWS_PRECIP_TOTAL) ? persist_read_int(PWS_PRECIP_TOTAL) : 0;
+}
+
+int persist_get_pws_wind_speed() {
+    return persist_exists(PWS_WIND_SPEED) ? persist_read_int(PWS_WIND_SPEED) : 0;
+}
+
+int persist_get_pws_wind_deg() {
+    return persist_exists(PWS_WIND_DEG) ? persist_read_int(PWS_WIND_DEG) : 0;
+}
+
+int persist_get_pws_wind_gust() {
+    return persist_exists(PWS_WIND_GUST) ? persist_read_int(PWS_WIND_GUST) : 0;
+}
+
+void persist_set_pws_temp(int val) {
+    persist_write_int(PWS_TEMP, val);
+}
+
+void persist_set_pws_precip_rate(int val) {
+    persist_write_int(PWS_PRECIP_RATE, val);
+}
+
+void persist_set_pws_precip_total(int val) {
+    persist_write_int(PWS_PRECIP_TOTAL, val);
+}
+
+void persist_set_pws_wind_speed(int val) {
+    persist_write_int(PWS_WIND_SPEED, val);
+}
+
+void persist_set_pws_wind_deg(int val) {
+    persist_write_int(PWS_WIND_DEG, val);
+}
+
+void persist_set_pws_wind_gust(int val) {
+    persist_write_int(PWS_WIND_GUST, val);
 }

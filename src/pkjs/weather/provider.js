@@ -686,6 +686,8 @@ WeatherProvider.prototype.getPayload = function() {
         return sunEvent.date.getTime() / 1000; // Seconds since epoch
     }));
     var sunEventsByteArray = Array.prototype.slice.call(new Uint8Array(sunEventsIntView.buffer));
+    var pwsRaw = localStorage.getItem('pws_data');
+    var pwsData = pwsRaw ? JSON.parse(pwsRaw) : null;
     var payload = {
         TEMP_TREND_INT16: tempsByteArray,
         PRECIP_TREND_UINT8: precips, // Holds values within [0,100]
@@ -704,7 +706,8 @@ WeatherProvider.prototype.getPayload = function() {
         TEMP_7DAY_LO_STR: (this.temp7dayLo || [0,0,0,0,0,0,0]).join(','),
         PRESSURE: Math.round((this.pressure || 0) * 100),
         POLLEN_INDEX: this.pollenIndex || -1,
-        APP_FETCH_TIME: Math.floor(Date.now() / 1000)
+        APP_FETCH_TIME: Math.floor(Date.now() / 1000),
+        PWS_DATA_STR: pwsData ? (pwsData.temp + ',' + pwsData.precipTotal + ',' + pwsData.precipRate + ',' + pwsData.windSpeed + ',' + pwsData.windDeg + ',' + pwsData.windGust) : '0,0,0,0,0,0'
     };
     return payload;
 };

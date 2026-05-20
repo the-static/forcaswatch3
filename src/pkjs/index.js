@@ -625,6 +625,7 @@ function getDefaultClaySettings() {
     return {
         provider: 'wunderground',
         owmApiKey: '',
+        pwsStationId: 'KKYWINCH111',
         fetch: false,
         location: '',
         temperatureUnits: 'f',
@@ -844,6 +845,56 @@ function sendFixtureWeather(fixture) {
 }
 
 /**
+ * Fetch current observations from the configured Personal Weather Station (PWS).
+ * @param {Function} callback Callback to execute when fetch finishes.
+ * @returns {void}
+ */
+function fetchPwsData(callback) {
+    var settings = JSON.parse(localStorage.getItem('clay-settings')) || {};
+    var stationId = (settings.pwsStationId || 'KKYWINCH111').toUpperCase().trim();
+
+    if (!stationId) {
+        console.log('No PWS Station ID configured.');
+        callback();
+        return;
+    }
+
+    var wu = new WundergroundProvider();
+    wu.withApiKey(function(apiKey) {
+        var url = 'https://api.weather.com/v2/pws/observations/current?stationId=' + encodeURIComponent(stationId) + '&format=json&units=e&apiKey=' + apiKey;
+        console.log('Fetching PWS data from ' + url);
+        WeatherProvider.request(url, 'GET', function(response) {
+            try {
+                var data = JSON.parse(response);
+                if (data && data.observations && data.observations.length > 0) {
+                    var obs = data.observations[0];
+                    var imp = obs.imperial;
+                    var pwsData = {
+                        temp: Math.round(imp.temp),
+                        precipRate: Math.round(imp.precipRate * 100),
+                        precipTotal: Math.round(imp.precipTotal * 100),
+                        windSpeed: Math.round(imp.windSpeed),
+                        windDeg: Math.round(obs.winddir),
+                        windGust: Math.round(imp.windGust || imp.windSpeed)
+                    };
+                    localStorage.setItem('pws_data', JSON.stringify(pwsData));
+                    console.log('Saved PWS data: ' + JSON.stringify(pwsData));
+                }
+            } catch(e) {
+                console.log('Error parsing PWS response: ' + e);
+            }
+            callback();
+        }, function(err) {
+            console.log('Error fetching PWS data: ' + JSON.stringify(err));
+            callback();
+        });
+    }, function(err) {
+        console.log('Error getting WU apiKey for PWS: ' + JSON.stringify(err));
+        callback();
+    });
+}
+
+/**
  * @typedef {import("./weather/provider")} WeatherProvider
  * @param {WeatherProvider} provider 
  * @param {boolean} force 
@@ -874,9 +925,11 @@ function fetch(provider, force) {
         name: provider.name
     }
     localStorage.setItem(KEY_LAST_FETCH_ATTEMPT, JSON.stringify(fetchStatus));
-    try {
-        provider.fetch(
-            function() {
+    
+    fetchPwsData(function() {
+        try {
+            provider.fetch(
+                function() {
                 // Success, update recent fetch time
                 app.fetchInProgress = false;
                 fetchStatus.lat = provider.lat;
@@ -929,6 +982,7 @@ function fetch(provider, force) {
         app.fetchInProgress = false;
         console.log('Weather fetch threw synchronously: ' + e.message);
     }
+    });
 }
 
 /**

@@ -71,11 +71,6 @@ static int s_axis_left_w = LEFT_AXIS_GRAPH_INSET_DEFAULT;
 static int s_label_strip_w = LEFT_AXIS_LABEL_STRIP_MIN_W;
 static char s_buffer_lo[12];
 static char s_buffer_hi[12];
-static GPoint s_points_temp[MAX_FORECAST_ENTRIES];
-static GPoint s_points_precip[MAX_FORECAST_ENTRIES + 2];
-static GPath s_path_precip_area_under;
-static GPath s_path_precip_top;
-static GPath s_path_temp;
 
 
 static RenderSpec make_render_spec()
@@ -481,6 +476,18 @@ static void forecast_update_proc(Layer *layer, GContext *ctx)
         return;
     }
 
+    GPoint *points_temp = malloc(sizeof(GPoint) * MAX_FORECAST_ENTRIES);
+    GPoint *points_precip = malloc(sizeof(GPoint) * (MAX_FORECAST_ENTRIES + 2));
+    GPath path_precip_area_under = {0};
+    GPath path_precip_top = {0};
+    GPath path_temp = {0};
+
+    if (!points_temp || !points_precip) {
+        if (points_temp) free(points_temp);
+        if (points_precip) free(points_precip);
+        return;
+    }
+
     int16_t temps[MAX_FORECAST_ENTRIES];
     uint8_t precips[MAX_FORECAST_ENTRIES];
     persist_get_temp_trend(temps, num_entries);
@@ -521,7 +528,7 @@ static void forecast_update_proc(Layer *layer, GContext *ctx)
         // Save a point for the precipitation probability
         int precip = precips[i];
         int precip_h = (float)precip / 100.0 * (h - BOTTOM_AXIS_H);
-        s_points_precip[i] = GPoint(entry_x, h - BOTTOM_AXIS_H - precip_h);
+        points_precip[i] = GPoint(entry_x, h - BOTTOM_AXIS_H - precip_h);
 
         // Save a point for the temperature reading
         int temp = temps[i];
@@ -530,7 +537,7 @@ static void forecast_update_proc(Layer *layer, GContext *ctx)
         {
             temp_h = (int)(((int32_t)(temp - lo) * temp_plot_h) / range_safe);
         }
-        s_points_temp[i] = GPoint(entry_x, h - temp_h - MARGIN_TEMP_H - BOTTOM_AXIS_H);
+        points_temp[i] = GPoint(entry_x, h - temp_h - MARGIN_TEMP_H - BOTTOM_AXIS_H);
 
         // emery: draw emphasized major/minor bottom-axis ticks for improved readability.
 #ifdef PBL_PLATFORM_EMERY
@@ -591,41 +598,41 @@ static void forecast_update_proc(Layer *layer, GContext *ctx)
 #endif
 
     // Complete the area under the precipitation
-    s_points_precip[num_entries] = GPoint(graph_bounds.origin.x + w, h - BOTTOM_AXIS_H);
-    s_points_precip[num_entries + 1] = GPoint(graph_bounds.origin.x, h - BOTTOM_AXIS_H);
+    points_precip[num_entries] = GPoint(graph_bounds.origin.x + w, h - BOTTOM_AXIS_H);
+    points_precip[num_entries + 1] = GPoint(graph_bounds.origin.x, h - BOTTOM_AXIS_H);
 
     // Fill the precipitation area
-    s_path_precip_area_under.num_points = num_entries + 2;
-    s_path_precip_area_under.points = s_points_precip;
+    path_precip_area_under.num_points = num_entries + 2;
+    path_precip_area_under.points = points_precip;
     MEMORY_HEAP_PROBE_SAMPLE("before_precip_path_draw", &redraw_probe);
     graphics_context_set_fill_color(ctx, PRECIP_FILL_COLOR);
-    gpath_draw_filled(ctx, &s_path_precip_area_under);
+    gpath_draw_filled(ctx, &path_precip_area_under);
     MEMORY_HEAP_PROBE_SAMPLE("after_precip_path_draw", &redraw_probe);
 
     if (render_spec.draw_night_overlay)
     {
         draw_night_hatch_over_precip(ctx, graph_plot_rect, forecast_start, forecast_end, &night_segments,
-                                     s_points_precip, num_entries);
+                                     points_precip, num_entries);
         draw_night_boundaries_over_precip(ctx, graph_plot_rect, forecast_start, forecast_end, &night_segments,
-                                          s_points_precip, num_entries);
+                                          points_precip, num_entries);
     }
 
     // Draw the precipitation line
-    s_path_precip_top.num_points = num_entries;
-    s_path_precip_top.points = s_points_precip;
+    path_precip_top.num_points = num_entries;
+    path_precip_top.points = points_precip;
     MEMORY_HEAP_PROBE_SAMPLE("before_precip_top_draw", &redraw_probe);
     graphics_context_set_stroke_color(ctx, GColorPictonBlue);
     graphics_context_set_stroke_width(ctx, 1);
-    gpath_draw_outline_open(ctx, &s_path_precip_top);
+    gpath_draw_outline_open(ctx, &path_precip_top);
     MEMORY_HEAP_PROBE_SAMPLE("after_precip_top_draw", &redraw_probe);
 
     // Draw the temperature line
-    s_path_temp.num_points = num_entries;
-    s_path_temp.points = s_points_temp;
+    path_temp.num_points = num_entries;
+    path_temp.points = points_temp;
     MEMORY_HEAP_PROBE_SAMPLE("before_temp_path_draw", &redraw_probe);
     graphics_context_set_stroke_color(ctx, PBL_IF_COLOR_ELSE(GColorRed, GColorWhite));
     graphics_context_set_stroke_width(ctx, 3); // Only odd stroke width values supported
-    gpath_draw_outline_open(ctx, &s_path_temp);
+    gpath_draw_outline_open(ctx, &path_temp);
     MEMORY_HEAP_PROBE_SAMPLE("after_temp_path_draw", &redraw_probe);
 
     // Draw a line for the bottom axis
@@ -656,6 +663,9 @@ static void forecast_update_proc(Layer *layer, GContext *ctx)
                        fonts_get_system_font(FONT_KEY_GOTHIC_18),
                        GRect(0, lo_y, s_label_strip_w, lo_size.h),
                        GTextOverflowModeFill, GTextAlignmentRight, NULL);
+    free(points_temp);
+    free(points_precip);
+
     MEMORY_HEAP_PROBE_LOG_MIN(&redraw_probe);
     MEMORY_LOG_HEAP("forecast_update:exit");
 }

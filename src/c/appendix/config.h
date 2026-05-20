@@ -23,6 +23,7 @@ enum TimeFont {
 enum TopContent {
     TOP_CONTENT_CALENDAR = 0,
     TOP_CONTENT_WEATHER = 1,
+    TOP_CONTENT_PWS = 2,
 };
 
 typedef struct {

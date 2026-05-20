@@ -101,7 +101,8 @@
       "POLLEN_INDEX",
       "APP_FETCH_TIME",
       "CLAY_ACTIVE",
-      "REQUEST_WEATHER"
+      "REQUEST_WEATHER",
+      "PWS_DATA_STR"
     ]
   }
 }

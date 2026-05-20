@@ -97,6 +97,10 @@ module.exports = function (minified) {
         // Override submit handler to force re-fetch if provider config changed
         $('#main-form').on('submit', function() {
             var returnTo;
+            var clayPwsStationId = clayConfig.getItemByMessageKey('pwsStationId');
+            if (clayPwsStationId && clayPwsStationId.get()) {
+                clayPwsStationId.set(clayPwsStationId.get().toUpperCase().trim());
+            }
             if (clayProvider.get() !== initProvider
                 || clayOwmApiKey.get() !== initOwmApiKey
                 || clayLocation.get() !== initLocation) {

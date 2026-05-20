@@ -209,6 +209,17 @@ module.exports = [
                 "description": "Optional: <a href='https://developers.google.com/maps/documentation/pollen'>Enable the Google Pollen API</a> and provide a key to see pollen levels."
             },
             {
+                "type": "input",
+                "label": "Wunderground PWS Station ID",
+                "messageKey": "pwsStationId",
+                "defaultValue": "KKYWINCH111",
+                "description": "Provide a Weather Underground Personal Weather Station (PWS) ID to display on the 3rd top screen.",
+                "attributes": {
+                    "autocapitalize": "characters",
+                    "style": "text-transform: uppercase;"
+                }
+            },
+            {
                 "type": "toggle",
                 "label": "Force weather fetch",
                 "messageKey": "fetch",
