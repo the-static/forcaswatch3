@@ -112,6 +112,8 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
             persist_set_pws_wind_gust(values[5]);
             if (curr && *curr != '\0') {
                 persist_set_pws_station_id(curr);
+            } else {
+                persist_set_pws_station_id("");
             }
         }
 #endif

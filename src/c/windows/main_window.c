@@ -19,11 +19,7 @@
 #define EMERY_WINDOW_PAD_X 2
 #define EMERY_WINDOW_PAD_TOP 2
 
-#ifndef PBL_PLATFORM_APLITE
-#define NUM_TOP_SCREENS 3
-#else
-#define NUM_TOP_SCREENS 2
-#endif
+// Screen count is determined dynamically by get_num_top_screens()
 #define EMERY_WINDOW_PAD_BOTTOM 4
 // emery: increase top calendar status row height to fit larger month and icon alignment.
 #ifdef PBL_PLATFORM_EMERY
@@ -40,6 +36,15 @@ static Layer *s_window_layer;
 
 static bool is_bottom_content_forecast(int16_t content) {
     return content == BOTTOM_CONTENT_FORECAST;
+}
+
+static int get_num_top_screens(void) {
+#ifndef PBL_PLATFORM_APLITE
+    if (persist_has_pws_station_id()) {
+        return 3;
+    }
+#endif
+    return 2;
 }
 
 static int16_t s_target_top_content;
@@ -69,8 +74,8 @@ static void main_window_load(Window *window) {
     int h = bounds.size.h;
     window_set_background_color(window, GColorBlack);
 
-    s_last_config_top_content = g_config->top_content % NUM_TOP_SCREENS;
-    s_target_top_content = g_config->top_content % NUM_TOP_SCREENS;
+    s_last_config_top_content = g_config->top_content % get_num_top_screens();
+    s_target_top_content = g_config->top_content % get_num_top_screens();
     s_target_bottom_content = (s_target_top_content == TOP_CONTENT_WEATHER) ? BOTTOM_CONTENT_FORECAST : BOTTOM_CONTENT_PRECIP;
     s_drawn_top_content = s_target_top_content;
     s_drawn_bottom_content = s_target_bottom_content;
@@ -203,7 +208,7 @@ static void touch_handler(const TouchEvent *event, void *context) {
 
         GRect bounds = layer_get_bounds(s_window_layer);
         if (event->y < bounds.size.h / 2) {
-            s_target_top_content = (s_target_top_content + 1) % NUM_TOP_SCREENS;
+            s_target_top_content = (s_target_top_content + 1) % get_num_top_screens();
         } else {
             s_target_bottom_content = (s_target_bottom_content + 1) % 2;
         }
@@ -214,7 +219,7 @@ static void touch_handler(const TouchEvent *event, void *context) {
 
 static void up_click_handler(ClickRecognizerRef recognizer, void *context) {
     reset_idle_timer();
-    s_target_top_content = (s_target_top_content + 1) % NUM_TOP_SCREENS;
+    s_target_top_content = (s_target_top_content + 1) % get_num_top_screens();
     main_window_refresh();
 }
 
@@ -274,9 +279,13 @@ void main_window_create() {
 }
 
 void main_window_refresh() {
-    if (s_last_config_top_content != (g_config->top_content % NUM_TOP_SCREENS)) {
-        s_last_config_top_content = g_config->top_content % NUM_TOP_SCREENS;
-        s_target_top_content = g_config->top_content % NUM_TOP_SCREENS;
+    int num_screens = get_num_top_screens();
+    if (s_target_top_content >= num_screens) {
+        s_target_top_content = 0;
+    }
+    if (s_last_config_top_content != (g_config->top_content % num_screens)) {
+        s_last_config_top_content = g_config->top_content % num_screens;
+        s_target_top_content = g_config->top_content % num_screens;
         s_target_bottom_content = (s_target_top_content == TOP_CONTENT_WEATHER) ? BOTTOM_CONTENT_FORECAST : BOTTOM_CONTENT_PRECIP;
     }
 

@@ -89,3 +89,4 @@ void persist_set_pws_wind_gust(int val);
 
 void persist_get_pws_station_id(char *buffer, const size_t buffer_size);
 void persist_set_pws_station_id(const char *val);
+bool persist_has_pws_station_id(void);

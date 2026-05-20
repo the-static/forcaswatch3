@@ -316,3 +316,14 @@ void persist_get_pws_station_id(char *buffer, const size_t buffer_size) {
 void persist_set_pws_station_id(const char *val) {
     persist_write_string(PWS_STATION_ID, val);
 }
+
+bool persist_has_pws_station_id(void) {
+#ifndef PBL_PLATFORM_APLITE
+    if (persist_exists(PWS_STATION_ID)) {
+        char buf[16];
+        persist_read_string(PWS_STATION_ID, buf, sizeof(buf));
+        return (buf[0] != '\0');
+    }
+#endif
+    return false;
+}
