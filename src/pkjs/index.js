@@ -855,6 +855,7 @@ function fetchPwsData(callback) {
 
     if (!stationId) {
         console.log('No PWS Station ID configured.');
+        localStorage.removeItem('pws_data');
         callback();
         return;
     }
@@ -880,13 +881,45 @@ function fetchPwsData(callback) {
                     };
                     localStorage.setItem('pws_data', JSON.stringify(pwsData));
                     console.log('Saved PWS data: ' + JSON.stringify(pwsData));
+                } else {
+                    console.log('No observations returned from PWS. Invalid ID?');
+                    var errPwsData = {
+                        temp: 0,
+                        precipRate: 0,
+                        precipTotal: 0,
+                        windSpeed: 0,
+                        windDeg: 0,
+                        windGust: 0,
+                        stationId: 'ERROR'
+                    };
+                    localStorage.setItem('pws_data', JSON.stringify(errPwsData));
                 }
             } catch(e) {
                 console.log('Error parsing PWS response: ' + e);
+                var errPwsData = {
+                    temp: 0,
+                    precipRate: 0,
+                    precipTotal: 0,
+                    windSpeed: 0,
+                    windDeg: 0,
+                    windGust: 0,
+                    stationId: 'ERROR'
+                };
+                localStorage.setItem('pws_data', JSON.stringify(errPwsData));
             }
             callback();
         }, function(err) {
             console.log('Error fetching PWS data: ' + JSON.stringify(err));
+            var errPwsData = {
+                temp: 0,
+                precipRate: 0,
+                precipTotal: 0,
+                windSpeed: 0,
+                windDeg: 0,
+                windGust: 0,
+                stationId: 'ERROR'
+            };
+            localStorage.setItem('pws_data', JSON.stringify(errPwsData));
             callback();
         });
     }, function(err) {

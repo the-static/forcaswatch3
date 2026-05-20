@@ -47,9 +47,11 @@ module.exports = function (minified) {
         clayOwmApiKey = clayConfig.getItemByMessageKey('owmApiKey');
         clayProvider = clayConfig.getItemByMessageKey('provider');
         clayLocation = clayConfig.getItemByMessageKey('location');
+        var clayPwsStationId = clayConfig.getItemByMessageKey('pwsStationId');
         initProvider = clayProvider.get();
         initOwmApiKey = clayOwmApiKey.get();
         initLocation = clayLocation.get();
+        var initPwsStationId = clayPwsStationId ? clayPwsStationId.get() : '';
 
         // Configure default provide section layout
         if (initProvider !== 'openweathermap') {
@@ -97,13 +99,13 @@ module.exports = function (minified) {
         // Override submit handler to force re-fetch if provider config changed
         $('#main-form').on('submit', function() {
             var returnTo;
-            var clayPwsStationId = clayConfig.getItemByMessageKey('pwsStationId');
             if (clayPwsStationId && clayPwsStationId.get()) {
                 clayPwsStationId.set(clayPwsStationId.get().toUpperCase().trim());
             }
             if (clayProvider.get() !== initProvider
                 || clayOwmApiKey.get() !== initOwmApiKey
-                || clayLocation.get() !== initLocation) {
+                || clayLocation.get() !== initLocation
+                || (clayPwsStationId && clayPwsStationId.get() !== initPwsStationId)) {
                 clayFetch.set(true);
             }
 

@@ -32,6 +32,12 @@ static const GPathInfo WIND_ARROW_POINTS = {
 static GPath *s_wind_arrow_path;
 
 static void pws_layer_update_proc(Layer *layer, GContext *ctx) {
+    char station_id[16];
+    persist_get_pws_station_id(station_id, sizeof(station_id));
+    if (strcmp(station_id, "ERROR") == 0) {
+        return;
+    }
+
     GRect bounds = layer_get_bounds(layer);
     
     // Draw wind arrow centered vertically on the right edge
@@ -87,6 +93,22 @@ void pws_layer_create(Layer* parent_layer, GRect frame) {
 void pws_layer_refresh() {
     if (!s_pws_layer || !s_temp_buffer || !s_detail_buffer) return;
 
+    char station_id[16];
+    persist_get_pws_station_id(station_id, sizeof(station_id));
+    if (strcmp(station_id, "ERROR") == 0) {
+        snprintf(s_temp_buffer, 48, "Invalid PWS ID");
+        snprintf(s_detail_buffer, 48, "Check settings");
+        text_layer_set_text(s_temp_layer, s_temp_buffer);
+        text_layer_set_text(s_detail_layer, s_detail_buffer);
+        GRect bounds = layer_get_bounds(s_pws_layer);
+        layer_set_frame(text_layer_get_layer(s_temp_layer), GRect(0, 4, bounds.size.w, bounds.size.h / 2));
+        layer_set_frame(text_layer_get_layer(s_detail_layer), GRect(0, (bounds.size.h / 2) + 2, bounds.size.w, bounds.size.h / 2));
+        text_layer_set_text_alignment(s_temp_layer, GTextAlignmentCenter);
+        text_layer_set_text_alignment(s_detail_layer, GTextAlignmentCenter);
+        layer_mark_dirty(s_pws_layer);
+        return;
+    }
+
     int temp = config_localize_temp(persist_get_pws_temp());
     int speed = persist_get_pws_wind_speed();
     int gust = persist_get_pws_wind_gust();
@@ -115,6 +137,7 @@ void pws_layer_refresh() {
     layer_set_frame(text_layer_get_layer(s_detail_layer), GRect(4, 20, bounds.size.w - 24, 18));
 #endif
     text_layer_set_text_alignment(s_temp_layer, GTextAlignmentLeft);
+    text_layer_set_text_alignment(s_detail_layer, GTextAlignmentLeft);
 
     int total_hundredths = persist_get_pws_precip_total();
     int rate_hundredths = persist_get_pws_precip_rate();
