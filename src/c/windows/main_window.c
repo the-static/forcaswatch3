@@ -385,3 +385,7 @@ void main_window_destroy() {
     // Interface for destroying the main window (implicitly unloads contents)
     window_destroy(s_main_window);
 }
+
+int16_t main_window_get_top_content(void) {
+    return s_target_top_content;
+}

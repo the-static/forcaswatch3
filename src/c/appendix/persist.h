@@ -86,3 +86,6 @@ void persist_set_pws_precip_total(int val);
 void persist_set_pws_wind_speed(int val);
 void persist_set_pws_wind_deg(int val);
 void persist_set_pws_wind_gust(int val);
+
+void persist_get_pws_station_id(char *buffer, const size_t buffer_size);
+void persist_set_pws_station_id(const char *val);

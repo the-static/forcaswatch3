@@ -3,6 +3,10 @@
 #include "c/appendix/config.h"
 #include "c/appendix/memory_log.h"
 #include "c/services/watch_services.h"
+#include "c/appendix/persist.h"
+#ifndef PBL_PLATFORM_APLITE
+#include "c/windows/main_window.h"
+#endif
 
 #define BATTERY_W 29
 #define BATTERY_H 10
@@ -22,7 +26,11 @@
 #endif
 
 static Layer *s_calendar_status_layer;
+#ifndef PBL_PLATFORM_APLITE
+static char s_calendar_month_text[16];
+#else
 static char s_calendar_month_text[10];
+#endif
 static GBitmap *s_mute_bitmap;
 static GBitmap *s_bt_bitmap;
 static GBitmap *s_bt_disconnect_bitmap;
@@ -197,8 +205,17 @@ void status_icons_refresh() {
 
 void calendar_status_layer_refresh() {
     if (!s_calendar_status_layer) return;
+#ifndef PBL_PLATFORM_APLITE
+    if (main_window_get_top_content() == TOP_CONTENT_PWS) {
+        persist_get_pws_station_id(s_calendar_month_text, sizeof(s_calendar_month_text));
+    } else {
+        struct tm tm_now = watch_services_localtime();
+        strftime(s_calendar_month_text, sizeof(s_calendar_month_text), "%b %Y", &tm_now);
+    }
+#else
     struct tm tm_now = watch_services_localtime();
     strftime(s_calendar_month_text, sizeof(s_calendar_month_text), "%b %Y", &tm_now);
+#endif
     status_icons_refresh();
 }
 

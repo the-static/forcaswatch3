@@ -6,7 +6,7 @@ enum key {
     CURRENT_TEMP, BATTERY_LEVEL, CONFIG,
     WIND_SPEED, WIND_DEG, HUMIDITY, WIND_GUST, PRECIP_7DAY, TEMP_7DAY_HI, TEMP_7DAY_LO, PRESSURE, POLLEN_INDEX,
     APP_FETCH_TIME, LAST_SYNC_TIME,
-    PWS_TEMP, PWS_PRECIP_RATE, PWS_PRECIP_TOTAL, PWS_WIND_SPEED, PWS_WIND_DEG, PWS_WIND_GUST
+    PWS_TEMP, PWS_PRECIP_RATE, PWS_PRECIP_TOTAL, PWS_WIND_SPEED, PWS_WIND_DEG, PWS_WIND_GUST, PWS_STATION_ID
 }; // Deprecated: BATTERY_LEVEL
 
 void persist_init() {
@@ -303,4 +303,16 @@ void persist_set_pws_wind_deg(int val) {
 
 void persist_set_pws_wind_gust(int val) {
     persist_write_int(PWS_WIND_GUST, val);
+}
+
+void persist_get_pws_station_id(char *buffer, const size_t buffer_size) {
+    if (persist_exists(PWS_STATION_ID)) {
+        persist_read_string(PWS_STATION_ID, buffer, buffer_size);
+    } else {
+        strncpy(buffer, "PWS", buffer_size);
+    }
+}
+
+void persist_set_pws_station_id(const char *val) {
+    persist_write_string(PWS_STATION_ID, val);
 }

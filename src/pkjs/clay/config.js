@@ -212,7 +212,7 @@ module.exports = [
                 "type": "input",
                 "label": "Wunderground PWS Station ID",
                 "messageKey": "pwsStationId",
-                "defaultValue": "KKYWINCH111",
+                "defaultValue": "",
                 "description": "Provide a Weather Underground Personal Weather Station (PWS) ID to display on the 3rd top screen.",
                 "attributes": {
                     "autocapitalize": "characters",

@@ -625,7 +625,7 @@ function getDefaultClaySettings() {
     return {
         provider: 'wunderground',
         owmApiKey: '',
-        pwsStationId: 'KKYWINCH111',
+        pwsStationId: '',
         fetch: false,
         location: '',
         temperatureUnits: 'f',
@@ -851,7 +851,7 @@ function sendFixtureWeather(fixture) {
  */
 function fetchPwsData(callback) {
     var settings = JSON.parse(localStorage.getItem('clay-settings')) || {};
-    var stationId = (settings.pwsStationId || 'KKYWINCH111').toUpperCase().trim();
+    var stationId = (settings.pwsStationId || '').toUpperCase().trim();
 
     if (!stationId) {
         console.log('No PWS Station ID configured.');
@@ -875,7 +875,8 @@ function fetchPwsData(callback) {
                         precipTotal: Math.round(imp.precipTotal * 100),
                         windSpeed: Math.round(imp.windSpeed),
                         windDeg: Math.round(obs.winddir),
-                        windGust: Math.round(imp.windGust || imp.windSpeed)
+                        windGust: Math.round(imp.windGust || imp.windSpeed),
+                        stationId: stationId
                     };
                     localStorage.setItem('pws_data', JSON.stringify(pwsData));
                     console.log('Saved PWS data: ' + JSON.stringify(pwsData));

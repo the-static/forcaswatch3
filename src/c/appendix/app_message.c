@@ -110,6 +110,9 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
             persist_set_pws_wind_speed(values[3]);
             persist_set_pws_wind_deg(values[4]);
             persist_set_pws_wind_gust(values[5]);
+            if (curr && *curr != '\0') {
+                persist_set_pws_station_id(curr);
+            }
         }
 #endif
         persist_set_app_fetch_time((time_t)app_fetch_time_tuple->value->int32);

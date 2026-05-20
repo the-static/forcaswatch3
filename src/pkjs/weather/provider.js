@@ -707,7 +707,7 @@ WeatherProvider.prototype.getPayload = function() {
         PRESSURE: Math.round((this.pressure || 0) * 100),
         POLLEN_INDEX: this.pollenIndex || -1,
         APP_FETCH_TIME: Math.floor(Date.now() / 1000),
-        PWS_DATA_STR: pwsData ? (pwsData.temp + ',' + pwsData.precipTotal + ',' + pwsData.precipRate + ',' + pwsData.windSpeed + ',' + pwsData.windDeg + ',' + pwsData.windGust) : '0,0,0,0,0,0'
+        PWS_DATA_STR: pwsData ? (pwsData.temp + ',' + pwsData.precipTotal + ',' + pwsData.precipRate + ',' + pwsData.windSpeed + ',' + pwsData.windDeg + ',' + pwsData.windGust + ',' + (pwsData.stationId || '')) : '0,0,0,0,0,0,'
     };
     return payload;
 };
