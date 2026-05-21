@@ -705,7 +705,7 @@ WeatherProvider.prototype.getPayload = function() {
         TEMP_7DAY_HI_STR: (this.temp7dayHi || [0,0,0,0,0,0,0]).join(','),
         TEMP_7DAY_LO_STR: (this.temp7dayLo || [0,0,0,0,0,0,0]).join(','),
         PRESSURE: Math.round((this.pressure || 0) * 100),
-        POLLEN_INDEX: this.pollenIndex || -1,
+        POLLEN_INDEX: this.pollenIndex >= 0 ? this.pollenIndex : -1,
         APP_FETCH_TIME: Math.floor(Date.now() / 1000),
         PWS_DATA_STR: pwsData ? (pwsData.temp + ',' + pwsData.precipTotal + ',' + pwsData.precipRate + ',' + pwsData.windSpeed + ',' + pwsData.windDeg + ',' + pwsData.windGust + ',' + (pwsData.stationId || '')) : '0,0,0,0,0,0,'
     };
