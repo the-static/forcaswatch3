@@ -34,6 +34,7 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
     Tuple *pollen_tuple = dict_find(iterator, MESSAGE_KEY_POLLEN_INDEX);
     Tuple *app_fetch_time_tuple = dict_find(iterator, MESSAGE_KEY_APP_FETCH_TIME);
     Tuple *clay_active_tuple = dict_find(iterator, MESSAGE_KEY_CLAY_ACTIVE);
+    Tuple *wind_trend_tuple = dict_find(iterator, MESSAGE_KEY_WIND_TREND_UINT8);
 #ifndef PBL_PLATFORM_APLITE
     Tuple *pws_data_str_tuple = dict_find(iterator, MESSAGE_KEY_PWS_DATA_STR);
 #endif
@@ -57,6 +58,9 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
     Tuple *clay_color_time_tuple = dict_find(iterator, MESSAGE_KEY_CLAY_COLOR_TIME);
     Tuple *clay_day_night_shading_tuple = dict_find(iterator, MESSAGE_KEY_CLAY_DAY_NIGHT_SHADING);
     Tuple *clay_top_content_tuple = dict_find(iterator, MESSAGE_KEY_CLAY_TOP_CONTENT);
+    Tuple *clay_wind_unit_tuple = dict_find(iterator, MESSAGE_KEY_CLAY_WIND_UNIT);
+    Tuple *clay_wind_max_tuple = dict_find(iterator, MESSAGE_KEY_CLAY_WIND_MAX);
+    Tuple *clay_show_wind_graph_tuple = dict_find(iterator, MESSAGE_KEY_CLAY_SHOW_WIND_GRAPH);
 
     bool handled = false;
 
@@ -117,6 +121,10 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
             }
         }
 #endif
+        if (wind_trend_tuple) {
+            uint8_t *wind_data = (uint8_t*) wind_trend_tuple->value->data;
+            persist_set_wind_trend(wind_data, num_entries);
+        }
         persist_set_app_fetch_time((time_t)app_fetch_time_tuple->value->int32);
         persist_set_last_sync_time(time(NULL));
         
@@ -189,6 +197,9 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
         GColor color_sunday = GColorFromHEX(clay_color_sunday_tuple->value->int32);
         GColor color_us_federal = GColorFromHEX(clay_color_us_federal_tuple->value->int32);
         GColor color_time = GColorFromHEX(clay_color_time_tuple->value->int32);
+        int16_t wind_unit = clay_wind_unit_tuple ? clay_wind_unit_tuple->value->int16 : 0;
+        int16_t wind_max = clay_wind_max_tuple ? (int16_t)clay_wind_max_tuple->value->int32 : 20;
+        bool show_wind_graph = clay_show_wind_graph_tuple ? (clay_show_wind_graph_tuple->value->int16 != 0) : true;
         Config config = (Config) {
             .celsius = clay_celsius,
             .time_lead_zero = time_lead_zero,
@@ -207,7 +218,10 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
             .color_us_federal = color_us_federal,
             .color_time = color_time,
             .day_night_shading = day_night_shading,
-            .top_content = clay_top_content_tuple->value->int16
+            .top_content = clay_top_content_tuple->value->int16,
+            .wind_unit = wind_unit,
+            .wind_max = wind_max,
+            .show_wind_graph = show_wind_graph
         };
         persist_set_config(config);
         main_window_refresh();
@@ -267,6 +281,9 @@ void app_message_send_startup_state(bool has_forecast_data) {
         dict_write_int16(outbox, MESSAGE_KEY_CLAY_SHOW_AM_PM, g_config->show_am_pm ? 1 : 0);
         dict_write_int16(outbox, MESSAGE_KEY_CLAY_DAY_NIGHT_SHADING, g_config->day_night_shading ? 1 : 0);
         dict_write_int16(outbox, MESSAGE_KEY_CLAY_TOP_CONTENT, g_config->top_content);
+        dict_write_int16(outbox, MESSAGE_KEY_CLAY_WIND_UNIT, g_config->wind_unit);
+        dict_write_int16(outbox, MESSAGE_KEY_CLAY_WIND_MAX, g_config->wind_max);
+        dict_write_int16(outbox, MESSAGE_KEY_CLAY_SHOW_WIND_GRAPH, g_config->show_wind_graph ? 1 : 0);
     }
 
     result = app_message_outbox_send();

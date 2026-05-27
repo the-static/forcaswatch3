@@ -100,6 +100,9 @@ function syncSettingsFromWatch(payload) {
     syncSetting('CLAY_SHOW_AM_PM', 'timeShowAmPm', Boolean);
     syncSetting('CLAY_DAY_NIGHT_SHADING', 'dayNightShading', Boolean);
     syncSetting('CLAY_TOP_CONTENT', 'topContent', function(v) { return ['calendar', 'weather'][v] || 'weather'; });
+    syncSetting('CLAY_WIND_UNIT', 'windUnit', function(v) { return v ? 'kph' : 'mph'; });
+    syncSetting('CLAY_WIND_MAX', 'windMax', String);
+    syncSetting('CLAY_SHOW_WIND_GRAPH', 'showWindGraph', Boolean);
 
     // Colors (convert hex integers to strings if necessary)
     var syncColor = function(payloadKey, settingsKey) {
@@ -533,6 +536,9 @@ function sendClaySettings(onSuccess, onFailure) {
         "CLAY_COLOR_TIME": app.settings.hasOwnProperty('colorTime') ? app.settings.colorTime : 16777215,
         "CLAY_DAY_NIGHT_SHADING": app.settings.hasOwnProperty('dayNightShading') ? app.settings.dayNightShading : true,
         "CLAY_TOP_CONTENT": ['calendar', 'weather'].indexOf(app.settings.topContent !== undefined ? app.settings.topContent : 'weather'),
+        "CLAY_WIND_UNIT": (app.settings.windUnit === 'kph') ? 1 : 0,
+        "CLAY_WIND_MAX": Number(app.settings.windMax || 0),
+        "CLAY_SHOW_WIND_GRAPH": app.settings.showWindGraph !== false,
         "CLAY_ACTIVE": 0
     }
     Pebble.sendAppMessage(payload, function() {
@@ -645,7 +651,10 @@ function getDefaultClaySettings() {
         vibe: false,
         btIcons: 'both',
         telemetryEnabled: true,
-        topContent: 'weather'
+        topContent: 'weather',
+        windUnit: 'mph',
+        windMax: '20',
+        showWindGraph: true
     };
 }
 
@@ -1056,6 +1065,10 @@ function needRefresh() {
     var lastFetchSuccess = JSON.parse(lastFetchSuccessString);
     if (lastFetchSuccess.time === null) {
         // Just covering all my bases
+        return true;
+    }
+    // If the last successful fetch was from a different provider, refresh immediately
+    if (app.provider && lastFetchSuccess.id !== app.provider.id) {
         return true;
     }
     // If the most recent fetch is more than 10 minutes old

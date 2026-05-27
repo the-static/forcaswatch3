@@ -635,6 +635,31 @@ static void forecast_update_proc(Layer *layer, GContext *ctx)
     gpath_draw_outline_open(ctx, &path_temp);
     MEMORY_HEAP_PROBE_SAMPLE("after_temp_path_draw", &redraw_probe);
 
+    // Prepare and draw the wind speed line (scaled independently)
+    if (g_config && g_config->show_wind_graph) {
+        uint8_t winds[num_entries];
+        persist_get_wind_trend(winds, num_entries);
+        int max_wind = (g_config->wind_max > 0) ? g_config->wind_max : 20;
+
+        graphics_context_set_stroke_color(ctx, PBL_IF_COLOR_ELSE(GColorYellow, GColorWhite));
+        graphics_context_set_stroke_width(ctx, 1);
+
+        GPoint prev_point = {0};
+        for (int i = 0; i < num_entries; ++i) {
+            int entry_x = graph_bounds.origin.x + i * entry_w;
+            int wind = winds[i];
+            if (wind > max_wind) {
+                wind = max_wind; // Clamp to configured max so line sticks to top
+            }
+            int wind_h = (int32_t)wind * temp_plot_h / max_wind;
+            GPoint curr_point = GPoint(entry_x, h - wind_h - MARGIN_TEMP_H - BOTTOM_AXIS_H);
+            if (i > 0) {
+                graphics_draw_line(ctx, prev_point, curr_point);
+            }
+            prev_point = curr_point;
+        }
+    } // end show_wind_graph
+
     // Draw a line for the bottom axis
     graphics_context_set_stroke_color(ctx, render_spec.axis_color);
     graphics_context_set_stroke_width(ctx, 1);

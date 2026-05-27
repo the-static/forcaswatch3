@@ -45,6 +45,9 @@ typedef struct {
     GColor color_time;
     bool day_night_shading;
     int16_t top_content;
+    int16_t wind_unit;
+    int16_t wind_max;
+    bool show_wind_graph;
 } Config;
 
 extern Config *g_config;

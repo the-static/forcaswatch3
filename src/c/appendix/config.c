@@ -30,7 +30,10 @@ static Config config_defaults(void) {
         .color_us_federal = GColorWhite,
         .color_time = GColorWhite,
         .day_night_shading = true,
-        .top_content = TOP_CONTENT_WEATHER
+        .top_content = TOP_CONTENT_WEATHER,
+        .wind_unit = 0,
+        .wind_max = 20,
+        .show_wind_graph = true
     };
 }
 
