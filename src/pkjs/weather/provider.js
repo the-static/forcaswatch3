@@ -711,7 +711,6 @@ WeatherProvider.prototype.getPayload = function() {
     var payload = {
         TEMP_TREND_INT16: tempsByteArray,
         PRECIP_TREND_UINT8: precips, // Holds values within [0,100]
-        WIND_TREND_UINT8: winds,
         FORECAST_START: this.startTime,
         NUM_ENTRIES: this.numEntries,
         CURRENT_TEMP: Math.round(this.currentTemp),
@@ -728,6 +727,7 @@ WeatherProvider.prototype.getPayload = function() {
         PRESSURE: Math.round((this.pressure || 0) * 100),
         POLLEN_INDEX: this.pollenIndex >= 0 ? this.pollenIndex : -1,
         APP_FETCH_TIME: Math.floor(Date.now() / 1000),
+        WIND_TREND_UINT8: winds,
         PWS_DATA_STR: pwsData ? (pwsData.temp + ',' + pwsData.precipTotal + ',' + pwsData.precipRate + ',' + pwsData.windSpeed + ',' + pwsData.windDeg + ',' + pwsData.windGust + ',' + (pwsData.stationId || '')) : '0,0,0,0,0,0,'
     };
     return payload;

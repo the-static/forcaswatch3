@@ -635,7 +635,8 @@ static void forecast_update_proc(Layer *layer, GContext *ctx)
     gpath_draw_outline_open(ctx, &path_temp);
     MEMORY_HEAP_PROBE_SAMPLE("after_temp_path_draw", &redraw_probe);
 
-    // Prepare and draw the wind speed line (scaled independently)
+#ifdef PBL_PLATFORM_EMERY
+    // emery: Prepare and draw the wind speed line (scaled independently) only on Emery watches to save resources on smaller platforms
     if (g_config && g_config->show_wind_graph) {
         uint8_t winds[num_entries];
         persist_get_wind_trend(winds, num_entries);
@@ -659,6 +660,7 @@ static void forecast_update_proc(Layer *layer, GContext *ctx)
             prev_point = curr_point;
         }
     } // end show_wind_graph
+#endif
 
     // Draw a line for the bottom axis
     graphics_context_set_stroke_color(ctx, render_spec.axis_color);

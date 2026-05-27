@@ -7,14 +7,18 @@ enum key {
     WIND_SPEED, WIND_DEG, HUMIDITY, WIND_GUST, PRECIP_7DAY, TEMP_7DAY_HI, TEMP_7DAY_LO, PRESSURE, POLLEN_INDEX,
     APP_FETCH_TIME, LAST_SYNC_TIME,
     PWS_TEMP, PWS_PRECIP_RATE, PWS_PRECIP_TOTAL, PWS_WIND_SPEED, PWS_WIND_DEG, PWS_WIND_GUST, PWS_STATION_ID,
+#ifdef PBL_PLATFORM_EMERY
     WIND_TREND
+#endif
 }; // Deprecated: BATTERY_LEVEL
 
 void persist_init() {
+#ifdef PBL_PLATFORM_EMERY
     if (!persist_exists(WIND_TREND)) {
         uint8_t data[48] = {0};
         persist_write_data(WIND_TREND, (void*) data, sizeof(data));
     }
+#endif
     if (!persist_exists(TEMP_LO)) {
         persist_write_int(TEMP_LO, 2);
     }
@@ -89,9 +93,11 @@ int persist_get_precip_trend(uint8_t *buffer, const size_t buffer_size) {
     return persist_read_data(PRECIP_TREND, (void*) buffer, buffer_size * sizeof(uint8_t));
 }
 
+#ifdef PBL_PLATFORM_EMERY
 int persist_get_wind_trend(uint8_t *buffer, const size_t buffer_size) {
     return persist_read_data(WIND_TREND, (void*) buffer, buffer_size * sizeof(uint8_t));
 }
+#endif
 
 time_t persist_get_forecast_start() {
     return (time_t) persist_read_int(FORECAST_START);
@@ -181,9 +187,11 @@ void persist_set_precip_trend(uint8_t *data, const size_t size) {
     persist_write_data(PRECIP_TREND, (void*) data, size * sizeof(uint8_t));
 }
 
+#ifdef PBL_PLATFORM_EMERY
 void persist_set_wind_trend(uint8_t *data, const size_t size) {
     persist_write_data(WIND_TREND, (void*) data, size * sizeof(uint8_t));
 }
+#endif
 
 void persist_set_forecast_start(time_t val) {
     persist_write_int(FORECAST_START, (int) val);

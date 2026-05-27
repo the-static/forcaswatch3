@@ -540,7 +540,7 @@ function sendClaySettings(onSuccess, onFailure) {
         "CLAY_WIND_MAX": Number(app.settings.windMax || 0),
         "CLAY_SHOW_WIND_GRAPH": app.settings.showWindGraph !== false,
         "CLAY_ACTIVE": 0
-    }
+    };
     Pebble.sendAppMessage(payload, function() {
         console.log('Message sent successfully: ' + JSON.stringify(payload));
         if (typeof onSuccess === 'function') {
