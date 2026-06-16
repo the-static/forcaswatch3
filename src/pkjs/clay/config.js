@@ -213,7 +213,7 @@ module.exports = [
             },
             {
                 "type": "toggle",
-                "label": "Show humidity graph",
+                "label": "Show dew point graph",
                 "messageKey": "showHumidityGraph",
                 "defaultValue": true
             },

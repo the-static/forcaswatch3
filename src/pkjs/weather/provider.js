@@ -700,15 +700,26 @@ WeatherProvider.prototype.getPayload = function() {
         if (val > 255) val = 255;
         return val;
     });
-    var humidity_source = (this.humidityTrend ? this.humidityTrend.slice(0, this.numEntries) : new Array(this.numEntries).fill(0));
-    while (humidity_source.length < this.numEntries) {
-        humidity_source.push(0);
+    var temp_source = (this.tempTrend ? this.tempTrend.slice(0, this.numEntries) : new Array(this.numEntries).fill(70));
+    while (temp_source.length < this.numEntries) {
+        temp_source.push(70);
     }
-    var humidities = humidity_source.map(function(h) {
-        var val = Number(h) || 0;
-        val = Math.round(val);
+    var humidity_source = (this.humidityTrend ? this.humidityTrend.slice(0, this.numEntries) : new Array(this.numEntries).fill(50));
+    while (humidity_source.length < this.numEntries) {
+        humidity_source.push(50);
+    }
+    var humidities = humidity_source.map(function(h, index) {
+        var tempF = Number(temp_source[index]) || 70;
+        var rh = Number(h) || 50;
+        var tempC = (tempF - 32) * 5 / 9;
+        var a = 17.27;
+        var b = 237.7;
+        var alpha = ((a * tempC) / (b + tempC)) + Math.log(Math.max(rh, 1) / 100);
+        var dewPointC = (b * alpha) / (a - alpha);
+        var dewPointF = (dewPointC * 9 / 5) + 32;
+        var val = Math.round(dewPointF);
         if (val < 0) val = 0;
-        if (val > 100) val = 100;
+        if (val > 255) val = 255;
         return val;
     });
     var tempsIntView = new Int16Array(temps);
