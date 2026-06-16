@@ -45,6 +45,8 @@ typedef struct {
     GColor color_time;
     bool day_night_shading;
     int16_t top_content;
+    bool idle_timeout_enabled;
+    int32_t idle_timeout_duration;
 #ifdef PBL_PLATFORM_EMERY
     // emery: wind graph settings
     int16_t wind_unit;

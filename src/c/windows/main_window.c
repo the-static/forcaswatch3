@@ -176,8 +176,9 @@ static void reset_idle_timer() {
         app_timer_cancel(s_idle_timer);
         s_idle_timer = NULL;
     }
-    if (!s_clay_active) {
-        s_idle_timer = app_timer_register(30000, idle_timer_callback, NULL);
+    if (!s_clay_active && g_config && g_config->idle_timeout_enabled) {
+        uint32_t timeout_ms = (g_config->idle_timeout_duration > 0) ? (g_config->idle_timeout_duration * 1000) : 30000;
+        s_idle_timer = app_timer_register(timeout_ms, idle_timer_callback, NULL);
     }
 }
 

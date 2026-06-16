@@ -31,6 +31,8 @@ static Config config_defaults(void) {
         .color_time = GColorWhite,
         .day_night_shading = true,
         .top_content = TOP_CONTENT_WEATHER,
+        .idle_timeout_enabled = true,
+        .idle_timeout_duration = 30,
 #ifdef PBL_PLATFORM_EMERY
         // emery: wind and humidity graph default settings
         .wind_unit = 0,

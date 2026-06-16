@@ -61,6 +61,8 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
     Tuple *clay_color_time_tuple = dict_find(iterator, MESSAGE_KEY_CLAY_COLOR_TIME);
     Tuple *clay_day_night_shading_tuple = dict_find(iterator, MESSAGE_KEY_CLAY_DAY_NIGHT_SHADING);
     Tuple *clay_top_content_tuple = dict_find(iterator, MESSAGE_KEY_CLAY_TOP_CONTENT);
+    Tuple *clay_idle_timeout_enabled_tuple = dict_find(iterator, MESSAGE_KEY_CLAY_IDLE_TIMEOUT_ENABLED);
+    Tuple *clay_idle_timeout_duration_tuple = dict_find(iterator, MESSAGE_KEY_CLAY_IDLE_TIMEOUT_DURATION);
 #ifdef PBL_PLATFORM_EMERY
     Tuple *clay_wind_unit_tuple = dict_find(iterator, MESSAGE_KEY_CLAY_WIND_UNIT);
     Tuple *clay_wind_max_tuple = dict_find(iterator, MESSAGE_KEY_CLAY_WIND_MAX);
@@ -204,6 +206,8 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
         bool show_am_pm = (bool) (clay_show_am_pm_tuple->value->int16);
         bool day_night_shading = (bool) (clay_day_night_shading_tuple->value->int16);
         int16_t time_font = clay_time_font_tuple->value->int16;
+        bool idle_timeout_enabled = clay_idle_timeout_enabled_tuple ? (clay_idle_timeout_enabled_tuple->value->int16 != 0) : true;
+        int32_t idle_timeout_duration = clay_idle_timeout_duration_tuple ? clay_idle_timeout_duration_tuple->value->int32 : 30;
         GColor color_today = GColorFromHEX(clay_color_today_tuple->value->int32);
         GColor color_saturday = GColorFromHEX(clay_color_saturday_tuple->value->int32);
         GColor color_sunday = GColorFromHEX(clay_color_sunday_tuple->value->int32);
@@ -234,6 +238,8 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
             .color_time = color_time,
             .day_night_shading = day_night_shading,
             .top_content = clay_top_content_tuple->value->int16,
+            .idle_timeout_enabled = idle_timeout_enabled,
+            .idle_timeout_duration = idle_timeout_duration,
 #ifdef PBL_PLATFORM_EMERY
             .wind_unit = wind_unit,
             .wind_max = wind_max,
@@ -299,6 +305,8 @@ void app_message_send_startup_state(bool has_forecast_data) {
         dict_write_int16(outbox, MESSAGE_KEY_CLAY_SHOW_AM_PM, g_config->show_am_pm ? 1 : 0);
         dict_write_int16(outbox, MESSAGE_KEY_CLAY_DAY_NIGHT_SHADING, g_config->day_night_shading ? 1 : 0);
         dict_write_int16(outbox, MESSAGE_KEY_CLAY_TOP_CONTENT, g_config->top_content);
+        dict_write_int16(outbox, MESSAGE_KEY_CLAY_IDLE_TIMEOUT_ENABLED, g_config->idle_timeout_enabled ? 1 : 0);
+        dict_write_int32(outbox, MESSAGE_KEY_CLAY_IDLE_TIMEOUT_DURATION, g_config->idle_timeout_duration);
 #ifdef PBL_PLATFORM_EMERY
         dict_write_int16(outbox, MESSAGE_KEY_CLAY_WIND_UNIT, g_config->wind_unit);
         dict_write_int16(outbox, MESSAGE_KEY_CLAY_WIND_MAX, g_config->wind_max);

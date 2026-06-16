@@ -218,6 +218,27 @@ module.exports = [
                 "defaultValue": true
             },
             {
+                "type": "toggle",
+                "label": "Auto-Exit on Idle",
+                "messageKey": "idleTimeoutEnabled",
+                "defaultValue": true
+            },
+            {
+                "type": "select",
+                "label": "Idle Timeout Duration",
+                "messageKey": "idleTimeoutDuration",
+                "defaultValue": "30",
+                "options": [
+                    { "label": "15 seconds", "value": "15" },
+                    { "label": "30 seconds", "value": "30" },
+                    { "label": "1 minute", "value": "60" },
+                    { "label": "2 minutes", "value": "120" },
+                    { "label": "5 minutes", "value": "300" },
+                    { "label": "10 minutes", "value": "600" }
+                ],
+                "description": "Sets how long the app stays open on idle before auto-exiting."
+            },
+            {
                 "type": "radiogroup",
                 "label": "Provider",
                 "messageKey": "provider",
