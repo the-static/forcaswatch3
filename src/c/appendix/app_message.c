@@ -36,6 +36,7 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
     Tuple *clay_active_tuple = dict_find(iterator, MESSAGE_KEY_CLAY_ACTIVE);
 #ifdef PBL_PLATFORM_EMERY
     Tuple *wind_trend_tuple = dict_find(iterator, MESSAGE_KEY_WIND_TREND_UINT8);
+    Tuple *humidity_trend_tuple = dict_find(iterator, MESSAGE_KEY_HUMIDITY_TREND_UINT8);
 #endif
 #ifndef PBL_PLATFORM_APLITE
     Tuple *pws_data_str_tuple = dict_find(iterator, MESSAGE_KEY_PWS_DATA_STR);
@@ -64,6 +65,7 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
     Tuple *clay_wind_unit_tuple = dict_find(iterator, MESSAGE_KEY_CLAY_WIND_UNIT);
     Tuple *clay_wind_max_tuple = dict_find(iterator, MESSAGE_KEY_CLAY_WIND_MAX);
     Tuple *clay_show_wind_graph_tuple = dict_find(iterator, MESSAGE_KEY_CLAY_SHOW_WIND_GRAPH);
+    Tuple *clay_show_humidity_graph_tuple = dict_find(iterator, MESSAGE_KEY_CLAY_SHOW_HUMIDITY_GRAPH);
 #endif
 
     bool handled = false;
@@ -129,6 +131,10 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
         if (wind_trend_tuple) {
             uint8_t *wind_data = (uint8_t*) wind_trend_tuple->value->data;
             persist_set_wind_trend(wind_data, num_entries);
+        }
+        if (humidity_trend_tuple) {
+            uint8_t *humidity_data = (uint8_t*) humidity_trend_tuple->value->data;
+            persist_set_humidity_trend(humidity_data, num_entries);
         }
 #endif
         persist_set_app_fetch_time((time_t)app_fetch_time_tuple->value->int32);
@@ -207,6 +213,7 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
         int16_t wind_unit = clay_wind_unit_tuple ? clay_wind_unit_tuple->value->int16 : 0;
         int16_t wind_max = clay_wind_max_tuple ? (int16_t)clay_wind_max_tuple->value->int32 : 20;
         bool show_wind_graph = clay_show_wind_graph_tuple ? (clay_show_wind_graph_tuple->value->int16 != 0) : true;
+        bool show_humidity_graph = clay_show_humidity_graph_tuple ? (clay_show_humidity_graph_tuple->value->int16 != 0) : true;
 #endif
         Config config = (Config) {
             .celsius = clay_celsius,
@@ -230,7 +237,8 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
 #ifdef PBL_PLATFORM_EMERY
             .wind_unit = wind_unit,
             .wind_max = wind_max,
-            .show_wind_graph = show_wind_graph
+            .show_wind_graph = show_wind_graph,
+            .show_humidity_graph = show_humidity_graph
 #endif
         };
         persist_set_config(config);
@@ -295,6 +303,7 @@ void app_message_send_startup_state(bool has_forecast_data) {
         dict_write_int16(outbox, MESSAGE_KEY_CLAY_WIND_UNIT, g_config->wind_unit);
         dict_write_int16(outbox, MESSAGE_KEY_CLAY_WIND_MAX, g_config->wind_max);
         dict_write_int16(outbox, MESSAGE_KEY_CLAY_SHOW_WIND_GRAPH, g_config->show_wind_graph ? 1 : 0);
+        dict_write_int16(outbox, MESSAGE_KEY_CLAY_SHOW_HUMIDITY_GRAPH, g_config->show_humidity_graph ? 1 : 0);
 #endif
     }
 

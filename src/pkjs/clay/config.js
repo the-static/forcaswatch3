@@ -212,6 +212,12 @@ module.exports = [
                 "defaultValue": true
             },
             {
+                "type": "toggle",
+                "label": "Show humidity graph",
+                "messageKey": "showHumidityGraph",
+                "defaultValue": true
+            },
+            {
                 "type": "radiogroup",
                 "label": "Provider",
                 "messageKey": "provider",

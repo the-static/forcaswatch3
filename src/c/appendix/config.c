@@ -32,10 +32,11 @@ static Config config_defaults(void) {
         .day_night_shading = true,
         .top_content = TOP_CONTENT_WEATHER,
 #ifdef PBL_PLATFORM_EMERY
-        // emery: wind graph default settings
+        // emery: wind and humidity graph default settings
         .wind_unit = 0,
         .wind_max = 20,
-        .show_wind_graph = true
+        .show_wind_graph = true,
+        .show_humidity_graph = true
 #endif
     };
 }

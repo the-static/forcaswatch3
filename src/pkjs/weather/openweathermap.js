@@ -106,6 +106,9 @@ OpenWeatherMapProvider.prototype.withProviderData = function(lat, lon, force, on
         this.windTrend = weatherData.hourly.map(function(entry) {
             return entry.wind_speed || 0;
         });
+        this.humidityTrend = weatherData.hourly.map(function(entry) {
+            return entry.humidity || 0;
+        });
         this.startTime = weatherData.hourly[0].dt;
         this.currentTemp = weatherData.current.temp;
         this.humidity = weatherData.current.humidity;

@@ -50,6 +50,7 @@ typedef struct {
     int16_t wind_unit;
     int16_t wind_max;
     bool show_wind_graph;
+    bool show_humidity_graph;
 #endif
 } Config;
 

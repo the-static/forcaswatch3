@@ -660,6 +660,30 @@ static void forecast_update_proc(Layer *layer, GContext *ctx)
             prev_point = curr_point;
         }
     } // end show_wind_graph
+
+    // emery: Prepare and draw the humidity line (scaled 0-100%) only on Emery watches
+    if (g_config && g_config->show_humidity_graph) {
+        uint8_t humidities[num_entries];
+        persist_get_humidity_trend(humidities, num_entries);
+
+        graphics_context_set_stroke_color(ctx, PBL_IF_COLOR_ELSE(GColorKellyGreen, GColorWhite));
+        graphics_context_set_stroke_width(ctx, 1);
+
+        GPoint prev_point = {0};
+        for (int i = 0; i < num_entries; ++i) {
+            int entry_x = graph_bounds.origin.x + i * entry_w;
+            int humidity = humidities[i];
+            if (humidity > 100) {
+                humidity = 100;
+            }
+            int humidity_h = (int32_t)humidity * temp_plot_h / 100;
+            GPoint curr_point = GPoint(entry_x, h - humidity_h - MARGIN_TEMP_H - BOTTOM_AXIS_H);
+            if (i > 0) {
+                graphics_draw_line(ctx, prev_point, curr_point);
+            }
+            prev_point = curr_point;
+        }
+    } // end show_humidity_graph
 #endif
 
     // Draw a line for the bottom axis

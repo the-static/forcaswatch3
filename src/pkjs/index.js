@@ -103,6 +103,7 @@ function syncSettingsFromWatch(payload) {
     syncSetting('CLAY_WIND_UNIT', 'windUnit', function(v) { return v ? 'kph' : 'mph'; });
     syncSetting('CLAY_WIND_MAX', 'windMax', String);
     syncSetting('CLAY_SHOW_WIND_GRAPH', 'showWindGraph', Boolean);
+    syncSetting('CLAY_SHOW_HUMIDITY_GRAPH', 'showHumidityGraph', Boolean);
 
     // Colors (convert hex integers to strings if necessary)
     var syncColor = function(payloadKey, settingsKey) {
@@ -539,6 +540,7 @@ function sendClaySettings(onSuccess, onFailure) {
         "CLAY_WIND_UNIT": (app.settings.windUnit === 'kph') ? 1 : 0,
         "CLAY_WIND_MAX": Number(app.settings.windMax || 0),
         "CLAY_SHOW_WIND_GRAPH": app.settings.showWindGraph !== false,
+        "CLAY_SHOW_HUMIDITY_GRAPH": app.settings.showHumidityGraph !== false,
         "CLAY_ACTIVE": 0
     };
     Pebble.sendAppMessage(payload, function() {
@@ -654,7 +656,8 @@ function getDefaultClaySettings() {
         topContent: 'weather',
         windUnit: 'mph',
         windMax: '20',
-        showWindGraph: true
+        showWindGraph: true,
+        showHumidityGraph: true
     };
 }
 

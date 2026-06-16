@@ -700,6 +700,17 @@ WeatherProvider.prototype.getPayload = function() {
         if (val > 255) val = 255;
         return val;
     });
+    var humidity_source = (this.humidityTrend ? this.humidityTrend.slice(0, this.numEntries) : new Array(this.numEntries).fill(0));
+    while (humidity_source.length < this.numEntries) {
+        humidity_source.push(0);
+    }
+    var humidities = humidity_source.map(function(h) {
+        var val = Number(h) || 0;
+        val = Math.round(val);
+        if (val < 0) val = 0;
+        if (val > 100) val = 100;
+        return val;
+    });
     var tempsIntView = new Int16Array(temps);
     var tempsByteArray = Array.prototype.slice.call(new Uint8Array(tempsIntView.buffer));
     var sunEventsIntView = new Int32Array(this.sunEvents.map(function(sunEvent) {
@@ -728,6 +739,7 @@ WeatherProvider.prototype.getPayload = function() {
         POLLEN_INDEX: this.pollenIndex >= 0 ? this.pollenIndex : -1,
         APP_FETCH_TIME: Math.floor(Date.now() / 1000),
         WIND_TREND_UINT8: winds,
+        HUMIDITY_TREND_UINT8: humidities,
         PWS_DATA_STR: pwsData ? (pwsData.temp + ',' + pwsData.precipTotal + ',' + pwsData.precipRate + ',' + pwsData.windSpeed + ',' + pwsData.windDeg + ',' + pwsData.windGust + ',' + (pwsData.stationId || '')) : '0,0,0,0,0,0,'
     };
     return payload;

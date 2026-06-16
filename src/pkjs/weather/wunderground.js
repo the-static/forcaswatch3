@@ -192,6 +192,9 @@ WundergroundProvider.prototype.withProviderData = function(lat, lon, force, onSu
                     this.windTrend = forecast.map(function(entry) {
                         return entry.wspd || (entry.wspd_mph !== undefined ? entry.wspd_mph : (entry.wind_speed || 0));
                     });
+                    this.humidityTrend = forecast.map(function(entry) {
+                        return entry.rh || entry.humidity || entry.relative_humidity || 0;
+                    });
                     this.startTime = forecast[0].fcst_valid;
                     this.currentTemp = currentData.temperature;
                     this.humidity = currentData.relativeHumidity;
