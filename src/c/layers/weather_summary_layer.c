@@ -167,11 +167,14 @@ void weather_summary_layer_refresh() {
 #endif
     text_layer_set_text_alignment(s_temp_layer, GTextAlignmentLeft);
 
+    int temp_f = persist_get_current_temp();
+    int rh = persist_get_humidity();
+    int dp_loc = config_localize_temp(get_dew_point(temp_f, rh));
     int press = persist_get_pressure();
     if (pollen >= 0) {
-        snprintf(s_hum_buffer, 32, "Hum: %d%%, Pol: %d/5", persist_get_humidity(), pollen);
+        snprintf(s_hum_buffer, 32, "Dew: %d°, Pol: %d/5", dp_loc, pollen);
     } else {
-        snprintf(s_hum_buffer, 32, "Hum: %d%%, %d.%02din", persist_get_humidity(), press / 100, press % 100);
+        snprintf(s_hum_buffer, 32, "Dew: %d°, %d.%02din", dp_loc, press / 100, press % 100);
     }
     text_layer_set_text(s_detail_layer, s_hum_buffer);
 
