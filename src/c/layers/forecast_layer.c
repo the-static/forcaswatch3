@@ -661,7 +661,7 @@ static void forecast_update_proc(Layer *layer, GContext *ctx)
         }
     } // end show_wind_graph
 
-    // emery: Prepare and draw the dew point line (scaled from 50°F to 80°F) only on Emery watches
+    // emery: Prepare and draw the dew point line (scaled from 55°F to 75°F) only on Emery watches
     if (g_config && g_config->show_humidity_graph) {
         uint8_t dew_points[num_entries];
         persist_get_humidity_trend(dew_points, num_entries);
@@ -673,13 +673,13 @@ static void forecast_update_proc(Layer *layer, GContext *ctx)
         for (int i = 0; i < num_entries; ++i) {
             int entry_x = graph_bounds.origin.x + i * entry_w;
             int dp = dew_points[i];
-            if (dp < 50) {
-                dp = 50;
+            if (dp < 55) {
+                dp = 55;
             }
-            if (dp > 80) {
-                dp = 80;
+            if (dp > 75) {
+                dp = 75;
             }
-            int dp_h = (int32_t)(dp - 50) * temp_plot_h / (80 - 50);
+            int dp_h = (int32_t)(dp - 55) * temp_plot_h / (75 - 55);
             GPoint curr_point = GPoint(entry_x, h - dp_h - MARGIN_TEMP_H - BOTTOM_AXIS_H);
             if (i > 0) {
                 graphics_draw_line(ctx, prev_point, curr_point);
