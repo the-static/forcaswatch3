@@ -530,7 +530,7 @@ WeatherProvider.prototype.withProviderData = function(lat, lon, force, onSuccess
 
 WeatherProvider.prototype.withPollenData = function(lat, lon, force, callback) {
     var claySettings = JSON.parse(localStorage.getItem('clay-settings')) || {};
-    var apiKey = claySettings.googlePollenApiKey;
+    var apiKey = (claySettings.googlePollenApiKey || '').trim();
     var provider = this;
 
     function fetchOpenMeteoPollen() {
@@ -574,10 +574,9 @@ WeatherProvider.prototype.withPollenData = function(lat, lon, force, callback) {
                     }
                 }
 
-                if (maxGrains >= 0) {
-                    var index = 0;
-                    if (maxGrains < 1) index = 0;
-                    else if (maxGrains <= 10) index = 1;
+                if (maxGrains > 0) {
+                    var index = 1;
+                    if (maxGrains <= 10) index = 1;
                     else if (maxGrains <= 50) index = 2;
                     else if (maxGrains <= 150) index = 3;
                     else if (maxGrains <= 500) index = 4;
@@ -586,6 +585,7 @@ WeatherProvider.prototype.withPollenData = function(lat, lon, force, callback) {
                     console.log('Open-Meteo pollen index calculated: ' + provider.pollenIndex + ' (max grains: ' + maxGrains + ')');
                 } else {
                     provider.pollenIndex = -1;
+                    console.log('Open-Meteo pollen data unavailable or zero for location; setting pollenIndex to -1.');
                 }
             } catch (e) {
                 console.log('Error parsing Open-Meteo pollen API: ' + e);
@@ -609,6 +609,9 @@ WeatherProvider.prototype.withPollenData = function(lat, lon, force, callback) {
     WeatherProvider.request(url, 'GET', function(response) {
         try {
             var data = JSON.parse(response);
+            if (data && data.error) {
+                console.log('Google Pollen API error: ' + JSON.stringify(data.error));
+            }
             var maxIndex = -1;
             if (data && data.dailyInfo && data.dailyInfo.length > 0) {
                 var info = data.dailyInfo[0];
