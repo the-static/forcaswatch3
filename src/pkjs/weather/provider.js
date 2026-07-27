@@ -179,7 +179,6 @@ var WeatherProvider = function() {
     this.gpsErrorCode = null;
     this.locationMode = null;
     this.pollenIndex = -1;
-    this.pollenName = '';
 };
 
 WeatherProvider.prototype.gpsEnable = function() {
@@ -534,49 +533,43 @@ WeatherProvider.prototype.withPollenData = function(lat, lon, force, callback) {
     var apiKey = (claySettings.googlePollenApiKey || '').trim();
     var provider = this;
 
-    var pollenKeyNames = {
-        'alder_pollen': 'Alder',
-        'birch_pollen': 'Birch',
-        'grass_pollen': 'Grass',
-        'mugwort_pollen': 'Mugwort',
-        'olive_pollen': 'Olive',
-        'ragweed_pollen': 'Ragweed'
-    };
-
     function fetchOpenMeteoPollen() {
         var omUrl = 'https://air-quality-api.open-meteo.com/v1/air-quality?latitude=' + lat + '&longitude=' + lon + '&current=alder_pollen,birch_pollen,grass_pollen,mugwort_pollen,olive_pollen,ragweed_pollen&hourly=alder_pollen,birch_pollen,grass_pollen,mugwort_pollen,olive_pollen,ragweed_pollen&forecast_days=1';
         WeatherProvider.request(omUrl, 'GET', function(response) {
             try {
                 var data = JSON.parse(response);
                 var maxGrains = -1;
-                var topName = '';
                 var pollenKeys = ['alder_pollen', 'birch_pollen', 'grass_pollen', 'mugwort_pollen', 'olive_pollen', 'ragweed_pollen'];
 
                 if (data) {
-                    // Find the single species with highest peak across current + hourly
-                    for (var i = 0; i < pollenKeys.length; i++) {
-                        var key = pollenKeys[i];
-                        var speciesMax = 0;
-
-                        // Check current value
-                        if (data.current && typeof data.current[key] === 'number') {
-                            speciesMax = data.current[key];
-                        }
-
-                        // Check hourly values for daily peak
-                        if (data.hourly && data.hourly[key]) {
-                            var numHours = data.hourly.time ? data.hourly.time.length : 0;
-                            var limit = Math.min(numHours, 24);
-                            for (var h = 0; h < limit; h++) {
-                                if (typeof data.hourly[key][h] === 'number' && data.hourly[key][h] > speciesMax) {
-                                    speciesMax = data.hourly[key][h];
-                                }
+                    if (data.current) {
+                        maxGrains = 0;
+                        var currentSum = 0;
+                        for (var i = 0; i < pollenKeys.length; i++) {
+                            var val = data.current[pollenKeys[i]];
+                            if (typeof val === 'number') {
+                                if (val > maxGrains) maxGrains = val;
+                                currentSum += val;
                             }
                         }
+                        if (currentSum > maxGrains) maxGrains = currentSum;
+                    }
 
-                        if (speciesMax > maxGrains) {
-                            maxGrains = speciesMax;
-                            topName = pollenKeyNames[key] || key;
+                    if (data.hourly) {
+                        if (maxGrains < 0) maxGrains = 0;
+                        var numHours = data.hourly.time ? data.hourly.time.length : 0;
+                        var limit = Math.min(numHours, 24);
+                        for (var h = 0; h < limit; h++) {
+                            var hourlySum = 0;
+                            for (var k = 0; k < pollenKeys.length; k++) {
+                                var key = pollenKeys[k];
+                                if (data.hourly[key] && typeof data.hourly[key][h] === 'number') {
+                                    var grainVal = data.hourly[key][h];
+                                    if (grainVal > maxGrains) maxGrains = grainVal;
+                                    hourlySum += grainVal;
+                                }
+                            }
+                            if (hourlySum > maxGrains) maxGrains = hourlySum;
                         }
                     }
                 }
@@ -589,23 +582,19 @@ WeatherProvider.prototype.withPollenData = function(lat, lon, force, callback) {
                     else if (maxGrains <= 500) index = 4;
                     else index = 5;
                     provider.pollenIndex = index;
-                    provider.pollenName = topName;
-                    console.log('Open-Meteo pollen: ' + topName + ' ' + provider.pollenIndex + '/5 (peak grains: ' + maxGrains + ')');
+                    console.log('Open-Meteo pollen index calculated: ' + provider.pollenIndex + ' (max grains: ' + maxGrains + ')');
                 } else {
                     provider.pollenIndex = -1;
-                    provider.pollenName = '';
                     console.log('Open-Meteo pollen data unavailable or zero for location; setting pollenIndex to -1.');
                 }
             } catch (e) {
                 console.log('Error parsing Open-Meteo pollen API: ' + e);
                 provider.pollenIndex = -1;
-                provider.pollenName = '';
             }
             callback();
         }, function(err) {
             console.log('Error fetching Open-Meteo pollen: ' + JSON.stringify(err));
             provider.pollenIndex = -1;
-            provider.pollenName = '';
             callback();
         });
     }
@@ -625,7 +614,6 @@ WeatherProvider.prototype.withPollenData = function(lat, lon, force, callback) {
                 console.log('Google Pollen API error: ' + JSON.stringify(data.error));
             }
             var maxIndex = -1;
-            var topName = '';
 
             var extractValue = function(obj) {
                 if (!obj) return null;
@@ -648,7 +636,6 @@ WeatherProvider.prototype.withPollenData = function(lat, lon, force, callback) {
                             var val = extractValue(item);
                             if (typeof val === 'number' && val > maxIndex) {
                                 maxIndex = val;
-                                topName = item.displayName || item.code || '';
                             }
                         }
                     };
@@ -659,11 +646,10 @@ WeatherProvider.prototype.withPollenData = function(lat, lon, force, callback) {
 
             if (validGoogleResponse) {
                 provider.pollenIndex = maxIndex >= 0 ? maxIndex : 0;
-                provider.pollenName = topName;
-                console.log('Google pollen: ' + topName + ' ' + provider.pollenIndex + '/5');
+                console.log('Google pollen index fetched: ' + provider.pollenIndex);
                 callback();
             } else {
-                console.log('Google pollen response yielded no valid index data; trying Open-Meteo fallback.');
+                console.log('Google pollen response yielded no dailyInfo; trying Open-Meteo fallback.');
                 fetchOpenMeteoPollen();
             }
         } catch(e) {
