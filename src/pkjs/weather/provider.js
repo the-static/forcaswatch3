@@ -540,6 +540,7 @@ WeatherProvider.prototype.withPollenData = function(lat, lon, force, callback) {
                 var data = JSON.parse(response);
                 var maxGrains = -1;
                 if (data && data.current) {
+                    maxGrains = 0;
                     var pollenKeys = ['alder_pollen', 'birch_pollen', 'grass_pollen', 'mugwort_pollen', 'olive_pollen', 'ragweed_pollen'];
                     for (var i = 0; i < pollenKeys.length; i++) {
                         var val = data.current[pollenKeys[i]];
