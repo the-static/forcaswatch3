@@ -28,5 +28,6 @@ Never write `migrations/` files manually. Edit declarative `schemas/` and genera
 
 ## Versioning Rule
 
-- Always prompt/remind the user to update the version number in `package.json` whenever committing changes or finishing a task.
+- **Automatic Patch Increment**: Whenever making code or configuration changes for a request, automatically bump the patch version by `0.0.1` in both `package.json` and `package.template.json`.
+- **User Prompt**: At the end of your response, state the newly auto-bumped version number and ask the user if they would like to modify it before committing.
 
