@@ -624,7 +624,9 @@ WeatherProvider.prototype.withPollenData = function(lat, lon, force, callback) {
                 return null;
             };
 
+            var validGoogleResponse = false;
             if (data && data.dailyInfo && data.dailyInfo.length > 0) {
+                validGoogleResponse = true;
                 for (var d = 0; d < data.dailyInfo.length; d++) {
                     var info = data.dailyInfo[d];
                     var processList = function(list) {
@@ -642,12 +644,12 @@ WeatherProvider.prototype.withPollenData = function(lat, lon, force, callback) {
                 }
             }
 
-            if (maxIndex >= 0) {
-                provider.pollenIndex = maxIndex;
+            if (validGoogleResponse) {
+                provider.pollenIndex = maxIndex >= 0 ? maxIndex : 0;
                 console.log('Google pollen index fetched: ' + provider.pollenIndex);
                 callback();
             } else {
-                console.log('Google pollen response yielded no valid index; trying Open-Meteo fallback.');
+                console.log('Google pollen response yielded no dailyInfo; trying Open-Meteo fallback.');
                 fetchOpenMeteoPollen();
             }
         } catch(e) {

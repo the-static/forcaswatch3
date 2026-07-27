@@ -1,7 +1,7 @@
 {
   "name": "forecaswatch2",
   "author": "Matt Rossman",
-  "version": "1.34.4",
+  "version": "1.34.5",
   "buildProfile": "dev",
   "keywords": [
     "pebble-app"
