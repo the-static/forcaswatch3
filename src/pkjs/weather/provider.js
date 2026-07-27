@@ -608,31 +608,40 @@ WeatherProvider.prototype.withPollenData = function(lat, lon, force, callback) {
 
     WeatherProvider.request(url, 'GET', function(response) {
         try {
+            console.log('Google Pollen response received: ' + response);
             var data = JSON.parse(response);
             if (data && data.error) {
                 console.log('Google Pollen API error: ' + JSON.stringify(data.error));
             }
             var maxIndex = -1;
+
+            var extractValue = function(obj) {
+                if (!obj) return null;
+                if (typeof obj.value === 'number') return obj.value;
+                if (typeof obj.value === 'string' && !isNaN(parseInt(obj.value, 10))) return parseInt(obj.value, 10);
+                if (obj.indexInfo && typeof obj.indexInfo === 'object') return extractValue(obj.indexInfo);
+                if (obj.index && typeof obj.index === 'object') return extractValue(obj.index);
+                return null;
+            };
+
             if (data && data.dailyInfo && data.dailyInfo.length > 0) {
-                var info = data.dailyInfo[0];
-                var processItem = function(p) {
-                    if (p && p.indexInfo && typeof p.indexInfo.value === 'number') {
-                        if (p.indexInfo.value > maxIndex) {
-                            maxIndex = p.indexInfo.value;
+                for (var d = 0; d < data.dailyInfo.length; d++) {
+                    var info = data.dailyInfo[d];
+                    var processList = function(list) {
+                        if (!list || !list.length) return;
+                        for (var i = 0; i < list.length; i++) {
+                            var item = list[i];
+                            var val = extractValue(item);
+                            if (typeof val === 'number' && val > maxIndex) {
+                                maxIndex = val;
+                            }
                         }
-                    }
-                };
-                if (info.pollenTypeInfo) {
-                    for (var i = 0; i < info.pollenTypeInfo.length; i++) {
-                        processItem(info.pollenTypeInfo[i]);
-                    }
-                }
-                if (info.plantInfo) {
-                    for (var j = 0; j < info.plantInfo.length; j++) {
-                        processItem(info.plantInfo[j]);
-                    }
+                    };
+                    processList(info.pollenTypeInfo);
+                    processList(info.plantInfo);
                 }
             }
+
             if (maxIndex >= 0) {
                 provider.pollenIndex = maxIndex;
                 console.log('Google pollen index fetched: ' + provider.pollenIndex);
