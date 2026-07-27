@@ -534,21 +534,46 @@ WeatherProvider.prototype.withPollenData = function(lat, lon, force, callback) {
     var provider = this;
 
     function fetchOpenMeteoPollen() {
-        var omUrl = 'https://air-quality-api.open-meteo.com/v1/air-quality?latitude=' + lat + '&longitude=' + lon + '&current=alder_pollen,birch_pollen,grass_pollen,mugwort_pollen,olive_pollen,ragweed_pollen';
+        var omUrl = 'https://air-quality-api.open-meteo.com/v1/air-quality?latitude=' + lat + '&longitude=' + lon + '&current=alder_pollen,birch_pollen,grass_pollen,mugwort_pollen,olive_pollen,ragweed_pollen&hourly=alder_pollen,birch_pollen,grass_pollen,mugwort_pollen,olive_pollen,ragweed_pollen&forecast_days=1';
         WeatherProvider.request(omUrl, 'GET', function(response) {
             try {
                 var data = JSON.parse(response);
                 var maxGrains = -1;
-                if (data && data.current) {
-                    maxGrains = 0;
-                    var pollenKeys = ['alder_pollen', 'birch_pollen', 'grass_pollen', 'mugwort_pollen', 'olive_pollen', 'ragweed_pollen'];
-                    for (var i = 0; i < pollenKeys.length; i++) {
-                        var val = data.current[pollenKeys[i]];
-                        if (typeof val === 'number' && val > maxGrains) {
-                            maxGrains = val;
+                var pollenKeys = ['alder_pollen', 'birch_pollen', 'grass_pollen', 'mugwort_pollen', 'olive_pollen', 'ragweed_pollen'];
+
+                if (data) {
+                    if (data.current) {
+                        maxGrains = 0;
+                        var currentSum = 0;
+                        for (var i = 0; i < pollenKeys.length; i++) {
+                            var val = data.current[pollenKeys[i]];
+                            if (typeof val === 'number') {
+                                if (val > maxGrains) maxGrains = val;
+                                currentSum += val;
+                            }
+                        }
+                        if (currentSum > maxGrains) maxGrains = currentSum;
+                    }
+
+                    if (data.hourly) {
+                        if (maxGrains < 0) maxGrains = 0;
+                        var numHours = data.hourly.time ? data.hourly.time.length : 0;
+                        var limit = Math.min(numHours, 24);
+                        for (var h = 0; h < limit; h++) {
+                            var hourlySum = 0;
+                            for (var k = 0; k < pollenKeys.length; k++) {
+                                var key = pollenKeys[k];
+                                if (data.hourly[key] && typeof data.hourly[key][h] === 'number') {
+                                    var grainVal = data.hourly[key][h];
+                                    if (grainVal > maxGrains) maxGrains = grainVal;
+                                    hourlySum += grainVal;
+                                }
+                            }
+                            if (hourlySum > maxGrains) maxGrains = hourlySum;
                         }
                     }
                 }
+
                 if (maxGrains >= 0) {
                     var index = 0;
                     if (maxGrains < 1) index = 0;
