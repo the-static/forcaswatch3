@@ -264,7 +264,7 @@ module.exports = [
                 "type": "input",
                 "label": "Google Pollen API key",
                 "messageKey": "googlePollenApiKey",
-                "description": "Optional: <a href='https://developers.google.com/maps/documentation/pollen'>Enable the Google Pollen API</a> and provide a key to see pollen levels."
+                "description": "Optional: <a href='https://developers.google.com/maps/documentation/pollen'>Enable the Google Pollen API</a> and provide a key. If left blank, free pollen data from Open-Meteo will be used automatically."
             },
             {
                 "type": "input",

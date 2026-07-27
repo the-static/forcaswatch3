@@ -531,43 +531,94 @@ WeatherProvider.prototype.withProviderData = function(lat, lon, force, onSuccess
 WeatherProvider.prototype.withPollenData = function(lat, lon, force, callback) {
     var claySettings = JSON.parse(localStorage.getItem('clay-settings')) || {};
     var apiKey = claySettings.googlePollenApiKey;
+    var provider = this;
+
+    function fetchOpenMeteoPollen() {
+        var omUrl = 'https://air-quality-api.open-meteo.com/v1/air-quality?latitude=' + lat + '&longitude=' + lon + '&current=alder_pollen,birch_pollen,grass_pollen,mugwort_pollen,olive_pollen,ragweed_pollen';
+        WeatherProvider.request(omUrl, 'GET', function(response) {
+            try {
+                var data = JSON.parse(response);
+                var maxGrains = -1;
+                if (data && data.current) {
+                    var pollenKeys = ['alder_pollen', 'birch_pollen', 'grass_pollen', 'mugwort_pollen', 'olive_pollen', 'ragweed_pollen'];
+                    for (var i = 0; i < pollenKeys.length; i++) {
+                        var val = data.current[pollenKeys[i]];
+                        if (typeof val === 'number' && val > maxGrains) {
+                            maxGrains = val;
+                        }
+                    }
+                }
+                if (maxGrains >= 0) {
+                    var index = 0;
+                    if (maxGrains < 1) index = 0;
+                    else if (maxGrains <= 10) index = 1;
+                    else if (maxGrains <= 50) index = 2;
+                    else if (maxGrains <= 150) index = 3;
+                    else if (maxGrains <= 500) index = 4;
+                    else index = 5;
+                    provider.pollenIndex = index;
+                    console.log('Open-Meteo pollen index calculated: ' + provider.pollenIndex + ' (max grains: ' + maxGrains + ')');
+                } else {
+                    provider.pollenIndex = -1;
+                }
+            } catch (e) {
+                console.log('Error parsing Open-Meteo pollen API: ' + e);
+                provider.pollenIndex = -1;
+            }
+            callback();
+        }, function(err) {
+            console.log('Error fetching Open-Meteo pollen: ' + JSON.stringify(err));
+            provider.pollenIndex = -1;
+            callback();
+        });
+    }
+
     if (!apiKey) {
-        this.pollenIndex = -1;
-        callback();
+        fetchOpenMeteoPollen();
         return;
     }
 
     var url = 'https://pollen.googleapis.com/v1/forecast:lookup?key=' + encodeURIComponent(apiKey) + '&location.latitude=' + lat + '&location.longitude=' + lon + '&days=1';
-    
-    var provider = this;
+
     WeatherProvider.request(url, 'GET', function(response) {
         try {
             var data = JSON.parse(response);
             var maxIndex = -1;
             if (data && data.dailyInfo && data.dailyInfo.length > 0) {
-                 var info = data.dailyInfo[0];
-                 if (info.pollenTypeInfo) {
-                     for (var i = 0; i < info.pollenTypeInfo.length; i++) {
-                         var p = info.pollenTypeInfo[i];
-                         if (p.indexInfo && typeof p.indexInfo.value === 'number') {
-                             if (p.indexInfo.value > maxIndex) {
-                                 maxIndex = p.indexInfo.value;
-                             }
-                         }
-                     }
-                 }
+                var info = data.dailyInfo[0];
+                var processItem = function(p) {
+                    if (p && p.indexInfo && typeof p.indexInfo.value === 'number') {
+                        if (p.indexInfo.value > maxIndex) {
+                            maxIndex = p.indexInfo.value;
+                        }
+                    }
+                };
+                if (info.pollenTypeInfo) {
+                    for (var i = 0; i < info.pollenTypeInfo.length; i++) {
+                        processItem(info.pollenTypeInfo[i]);
+                    }
+                }
+                if (info.plantInfo) {
+                    for (var j = 0; j < info.plantInfo.length; j++) {
+                        processItem(info.plantInfo[j]);
+                    }
+                }
             }
-            provider.pollenIndex = maxIndex;
-            console.log('Pollen index fetched: ' + provider.pollenIndex);
+            if (maxIndex >= 0) {
+                provider.pollenIndex = maxIndex;
+                console.log('Google pollen index fetched: ' + provider.pollenIndex);
+                callback();
+            } else {
+                console.log('Google pollen response yielded no valid index; trying Open-Meteo fallback.');
+                fetchOpenMeteoPollen();
+            }
         } catch(e) {
-            console.log('Error parsing pollen API: ' + e);
-            provider.pollenIndex = -1;
+            console.log('Error parsing Google pollen API: ' + e + '; trying Open-Meteo fallback.');
+            fetchOpenMeteoPollen();
         }
-        callback();
     }, function(err) {
-        console.log('Error fetching pollen: ' + JSON.stringify(err));
-        provider.pollenIndex = -1;
-        callback();
+        console.log('Error fetching Google pollen: ' + JSON.stringify(err) + '; trying Open-Meteo fallback.');
+        fetchOpenMeteoPollen();
     });
 };
 
