@@ -25,3 +25,8 @@ If you need runtime logs, `mise install-emulator --logs` runs it in an emulator 
 ## Supabase migrations
 
 Never write `migrations/` files manually. Edit declarative `schemas/` and generate migrations as-needed before commits with `supabase db diff -f <label>`
+
+## Versioning Rule
+
+- Always prompt/remind the user to update the version number in `package.json` whenever committing changes or finishing a task.
+
